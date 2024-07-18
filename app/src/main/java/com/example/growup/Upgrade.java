@@ -30,7 +30,7 @@ public class Upgrade {
 
     public static void lastVersion() {
         MainActivity.activity.runOnUiThread(() -> {
-            Toast.makeText(MainActivity.activity, "Your App is Up-To-Date", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.activity, "Your App is Up-To-Date Now", Toast.LENGTH_SHORT).show();
         });
     }
 //    public static void upgrade_1_to_2() {}
