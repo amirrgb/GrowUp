@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         activity = this;
+        System.out.println("hi i start to begin");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         manageAccessThread.start();
