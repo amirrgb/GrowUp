@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         activity = this;
         System.out.println("hi i start to begin");
+        System.out.println("hi again");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         manageAccessThread.start();
