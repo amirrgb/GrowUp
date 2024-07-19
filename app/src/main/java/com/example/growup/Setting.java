@@ -1,13 +1,20 @@
 package com.example.growup;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.AlignmentSpan;
+import android.view.ActionProvider;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.view.GravityCompat;
@@ -19,7 +26,7 @@ import com.google.android.material.navigation.NavigationView;
 public class Setting {
 
     public static void initializeDrawerLayout(Activity activity){
-        DrawerLayout drawerLayout = MainActivity.activity.findViewById(R.id.drawer_layout);
+        DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
         NavigationView navigationView = activity.findViewById(R.id.navigationView);
         ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(
                 activity, drawerLayout, R.string.navigation_drawer_open,
@@ -27,16 +34,30 @@ public class Setting {
         drawerLayout.addDrawerListener(actionBarDrawerToggle);
         actionBarDrawerToggle.syncState();
 
-        MenuItem menuItem1 = navigationView.getMenu().findItem(R.id.navMenuItem1);
+        MenuItem versionItem = navigationView.getMenu().findItem(R.id.navMenuItem1);
         String appVersion = BuildConfig.VERSION_NAME;
         SpannableString centeredText = new SpannableString("Version: " + appVersion);
         centeredText.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, appVersion.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-        menuItem1.setTitle(centeredText);
+        versionItem.setTitle(centeredText);
+
+
+        MenuItem syncToGoogleDriveItem = navigationView.getMenu().findItem(R.id.navMenuItem2);
+        String gmail_text = "Sync To Google Drive";
+        if (DBHelper.getAccount().getUserEmail() != ""){
+            gmail_text = DBHelper.getAccount().getUserEmail() + "@gmail.com";
+        }
+        centeredText = new SpannableString(gmail_text);
+        centeredText.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, appVersion.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        syncToGoogleDriveItem.setTitle(centeredText);
+
+
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
             drawerLayout.openDrawer(GravityCompat.START);
         }
+
+
         AppCompatButton app_setting_back_button = MainActivity.activity.findViewById(R.id.setting_button);
         app_setting_back_button.setOnClickListener(view -> {
             if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -47,7 +68,7 @@ public class Setting {
         });
     }
 
-    public static void setListenerForSettingButton(){
+    public static void setListenerForButtons(){
         AppCompatButton app_setting_back_button = MainActivity.activity.findViewById(R.id.setting_button);
         app_setting_back_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,7 +80,14 @@ public class Setting {
                 }
             }
         });
+
+        Button button = MainActivity.activity.findViewById(R.id.sync_button);
+        button.setOnClickListener(view -> {
+            MainActivity.activity.runOnUiThread(() -> {
+                Toast.makeText(MainActivity.activity, "Please Wait To Load Google Page", Toast.LENGTH_SHORT).show();
+            });
+            MainActivity.googleCloud.signInToGoogleCloud(MainActivity.signInToBackUpLauncher)
+            ;});
     }
 
-
-}
+    }

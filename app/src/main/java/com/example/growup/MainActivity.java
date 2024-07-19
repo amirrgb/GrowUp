@@ -10,11 +10,23 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.GridView;
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.google.android.material.navigation.NavigationView;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -23,14 +35,14 @@ public class MainActivity extends AppCompatActivity {
     public static int currentId = 0;
     public static SharedPreferences preferences;
     public static GridAdapter adapter;
+    public static GoogleCloud googleCloud;
     public static GridView gridView;
     public static NoteHandler noteCreator;
-
+    public static ActivityResultLauncher<Intent> signInToBackUpLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         activity = this;
-        System.out.println("step 1");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         manageAccessThread.start();
@@ -45,31 +57,53 @@ public class MainActivity extends AppCompatActivity {
         }catch (Exception e){
             e.printStackTrace();
         }
-        System.out.println("step 2");
         LogHandler.CreateLogFile();
         LogHandler.saveLog("--------------------------new run----------------------------", false);
         preferences = getPreferences(Context.MODE_PRIVATE);
-        System.out.println("step 3");
         dbHelper = new DBHelper(this);
         Upgrade.versionHandler(preferences);
-        System.out.println("step 4");
         dbHelper.insertIntoTypesTable("2","folder","ic_folder");
         dbHelper.insertIntoTypesTable("3","note","ic_note");
-
+        googleCloud = new GoogleCloud(this);
         noteCreator = new NoteHandler();
-        System.out.println("step 5");
         gridView = findViewById(R.id.gridView);
         adapter = new GridAdapter();
-        System.out.println("step 6");
         gridView.setAdapter(adapter);
-        System.out.println("step 7");
 
     }
 
     @Override
     protected void onStart(){
         super.onStart();
-        Setting.setListenerForSettingButton();
+        Setting.setListenerForButtons();
+
+//        Button button = findViewById(R.id.sync_button);
+//        button.setOnClickListener(view -> {MainActivity.googleCloud.signInToGoogleCloud(signInToBackUpLauncher);});
+
+        signInToBackUpLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if(result.getResultCode() == RESULT_OK){
+                    try{
+                        Thread signInToBackUpThread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final GoogleCloud.signInResult signInResult =
+                                        googleCloud.handleSignInThread(result.getData());
+                                if (signInResult.getUserEmail() == null || signInResult.getFolderId() == null){
+                                    MainActivity.activity.runOnUiThread(() -> {
+                                    Toast.makeText(MainActivity.this, "Login Failed (Because of VPN) Try Again ): ", Toast.LENGTH_SHORT).show();
+                                    });
+                                    return;
+                                }
+                                DBHelper.insertIntoAccountsTable(signInResult.getUserEmail(),signInResult.getRefreshToken(),signInResult.getFolderId());
+                            }
+                        });
+                        signInToBackUpThread.start();
+                    }catch (Exception e){
+                        LogHandler.saveLog("Failed to sign in to backup : "  + e.getLocalizedMessage(),true);
+                    }
+                }
+            });
 
     }
 
@@ -131,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static void backButtonProcess(){
         if (dbHelper.getParentId(currentId) == 0){
-            Setting.setListenerForSettingButton();
+            Setting.setListenerForButtons();
         }
         boolean canSaveNote = true;
         if (DBHelper.getTypeIdOfAsset(currentId).equals("3")) {
@@ -145,11 +179,33 @@ public class MainActivity extends AppCompatActivity {
             adapter.reinitializeGridAdapter();
         }
     }
-
-
     @Override
     public void onBackPressed() {
        backButtonProcess();
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (dbHelper.getParentId(currentId) == 0){
+            Setting.setListenerForButtons();
+        }
+        if (DBHelper.getTypeIdOfAsset(currentId).equals("3")) {
+            if (!NoteHandler.saveNote()){
+                MainActivity.noteCreator.openNote();
+            }
+        }
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (dbHelper.getParentId(currentId) == 0){
+            Setting.setListenerForButtons();
+        }
+        if (DBHelper.getTypeIdOfAsset(currentId).equals("3")) {
+            if (!NoteHandler.saveNote()){
+                MainActivity.noteCreator.openNote();
+            }
+        }
     }
 
 }

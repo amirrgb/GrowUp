@@ -45,6 +45,7 @@ public class LogHandler extends Application {
     }
 
     public static void saveLog(String text, boolean isError) {
+        System.out.println("ERR OR LOG IS : " + text);
         File logDir = new File(LOG_DIR_PATH);
         File logFile = new File(logDir, logFileName);
 

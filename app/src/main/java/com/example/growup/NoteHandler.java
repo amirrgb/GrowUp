@@ -27,17 +27,23 @@ public class NoteHandler {
                     public void onClick(DialogInterface dialog, int which) {
                         String noteName = input.getText().toString();
                         if (noteName.equals("")) {
+                            MainActivity.activity.runOnUiThread(() -> {
                             Toast.makeText(MainActivity.activity, "Note name cannot be empty", Toast.LENGTH_SHORT).show();
+                            });
                         } else {
                             if (MainActivity.dbHelper.insertIntoAssetsTable(noteName,
                                     MainActivity.dbHelper.getTypeId("note"), MainActivity.currentId)) {
                                 String lastId = MainActivity.dbHelper.getLastId();
                                 MainActivity.dbHelper.insertIntoNotesTable(lastId, noteName, "");
+                                MainActivity.activity.runOnUiThread(() -> {
                                 Toast.makeText(MainActivity.activity, "Note created", Toast.LENGTH_SHORT).show();
+                                });
                                 MainActivity.adapter.readChildItemsOf(MainActivity.currentId);
                                 MainActivity.adapter.updateGridAdapter();
                             }else{
+                                MainActivity.activity.runOnUiThread(() -> {
                                 Toast.makeText(MainActivity.activity, "cant create Note", Toast.LENGTH_SHORT).show();
+                                });
                             }
                         }
                     }
@@ -63,7 +69,7 @@ public class NoteHandler {
         EditText textViewContent = MainActivity.activity.findViewById(R.id.textViewContent);
         textViewTitle.setText(title);
         textViewContent.setText(content);
-        Setting.setListenerForSettingButton();
+        Setting.setListenerForButtons();
     }
 
     public static boolean saveNote(){
@@ -72,7 +78,9 @@ public class NoteHandler {
         String title = textViewTitle.getText().toString();
         String content = textViewContent.getText().toString();
         if (title.equals("") || title.equals(" ")) {
+            MainActivity.activity.runOnUiThread(() -> {
             Toast.makeText(MainActivity.activity, "Title cannot be empty", Toast.LENGTH_SHORT).show();
+            });
             return false;
         } else {
             MainActivity.dbHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId), title, content);
