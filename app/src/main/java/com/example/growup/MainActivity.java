@@ -28,6 +28,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.Calendar;
+
 
 public class MainActivity extends AppCompatActivity {
     public static Activity activity;
@@ -77,9 +79,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         Setting.setListenerForButtons();
 
-//        Button button = findViewById(R.id.sync_button);
-//        button.setOnClickListener(view -> {MainActivity.googleCloud.signInToGoogleCloud(signInToBackUpLauncher);});
-
         signInToBackUpLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if(result.getResultCode() == RESULT_OK){
@@ -104,6 +103,26 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+
+
+
+        AlarmHandler alarmHandler = new AlarmHandler(this);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, 5);
+        alarmHandler.setAlarm(calendar.getTimeInMillis(), 0, "Reminder", "This is your reminder");
+
+        // Cancel the alarm
+        // alarmHandler.cancelAlarm(0);
+
+
+
+
+
+
+
+
+
 
     }
 

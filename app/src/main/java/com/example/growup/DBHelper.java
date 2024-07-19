@@ -51,6 +51,14 @@ public class DBHelper extends SQLiteOpenHelper {
                 "RefreshToken TEXT," +
                 "folderId TEXT)";
         sqLiteDatabase.execSQL(Accounts);
+        String Reminders = "CREATE TABLE IF NOT EXISTS REMINDERS(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "title TEXT," +
+                "message TEXT," +
+                "date TEXT," +
+                "time TEXT," +
+                "priority TEXT)";
+        sqLiteDatabase.execSQL(Reminders);
     }
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {}
@@ -103,6 +111,16 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
+    public static boolean insertIntoRemindersTable(String title,String message, String date
+            , String time,String priority){
+        try {
+            dbWritable.beginTransaction();
+            String sqlQuery = "INSERT INTO 
+        }catch (Exception e){
+
+        }
+        return false;
+    }
     public void insertIntoTypesTable(String id,String type,String icon_name){
         try {
             dbWritable.beginTransaction();
