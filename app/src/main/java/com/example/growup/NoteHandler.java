@@ -11,7 +11,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class NoteHandler {
     private FloatingActionButton addNewNoteButton = MainActivity.activity.findViewById(R.id.fabCreateNote);
-    private FloatingActionButton saveButton = MainActivity.activity.findViewById(R.id.save_button);
 
     public void createNoteButton() {
         addNewNoteButton = MainActivity.activity.findViewById(R.id.fabCreateNote);
@@ -56,6 +55,7 @@ public class NoteHandler {
 
     public void openNote() {
         MainActivity.activity.setContentView(R.layout.note_item);
+        MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
         String[] temp = MainActivity.dbHelper.getNote(MainActivity.currentId);
         String title = temp[0];
         String content = temp[1];
@@ -63,33 +63,24 @@ public class NoteHandler {
         EditText textViewContent = MainActivity.activity.findViewById(R.id.textViewContent);
         textViewTitle.setText(title);
         textViewContent.setText(content);
-        createSaveButton();
+        Setting.setListenerForSettingButton();
     }
 
-    public void saveNote(){
+    public static boolean saveNote(){
         EditText textViewTitle = MainActivity.activity.findViewById(R.id.textViewTitle);
         EditText textViewContent = MainActivity.activity.findViewById(R.id.textViewContent);
         String title = textViewTitle.getText().toString();
         String content = textViewContent.getText().toString();
-        if (title.equals("")) {
+        if (title.equals("") || title.equals(" ")) {
             Toast.makeText(MainActivity.activity, "Title cannot be empty", Toast.LENGTH_SHORT).show();
+            return false;
         } else {
-            MainActivity.dbHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId),title,content);
+            MainActivity.dbHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId), title, content);
+            return true;
         }
-        MainActivity.currentId = MainActivity.dbHelper.getParentId(MainActivity.currentId);
-        MainActivity.adapter.reinitializeGridAdapter();
+
+//        MainActivity.currentId = MainActivity.dbHelper.getParentId(MainActivity.currentId);
+//        MainActivity.adapter.reinitializeGridAdapter();
     }
-
-    public void createSaveButton(){
-        saveButton = MainActivity.activity.findViewById(R.id.save_button);
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveNote();
-            }
-        });
-    }
-
-
 
 }

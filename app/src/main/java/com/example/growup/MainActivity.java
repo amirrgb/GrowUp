@@ -5,12 +5,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
 import android.widget.GridView;
-import android.content.pm.PackageManager;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -25,11 +26,11 @@ public class MainActivity extends AppCompatActivity {
     public static GridView gridView;
     public static NoteHandler noteCreator;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         activity = this;
-        System.out.println("hi i start to begin");
-        System.out.println("hi again");
+        System.out.println("step 1");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         manageAccessThread.start();
@@ -44,20 +45,32 @@ public class MainActivity extends AppCompatActivity {
         }catch (Exception e){
             e.printStackTrace();
         }
-
+        System.out.println("step 2");
         LogHandler.CreateLogFile();
         LogHandler.saveLog("--------------------------new run----------------------------", false);
         preferences = getPreferences(Context.MODE_PRIVATE);
+        System.out.println("step 3");
         dbHelper = new DBHelper(this);
         Upgrade.versionHandler(preferences);
-
+        System.out.println("step 4");
         dbHelper.insertIntoTypesTable("2","folder","ic_folder");
         dbHelper.insertIntoTypesTable("3","note","ic_note");
 
         noteCreator = new NoteHandler();
+        System.out.println("step 5");
         gridView = findViewById(R.id.gridView);
         adapter = new GridAdapter();
+        System.out.println("step 6");
         gridView.setAdapter(adapter);
+        System.out.println("step 7");
+
+    }
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+        Setting.setListenerForSettingButton();
+
     }
 
     Thread manageAccessThread = new Thread() {
@@ -115,4 +128,28 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    public static void backButtonProcess(){
+        if (dbHelper.getParentId(currentId) == 0){
+            Setting.setListenerForSettingButton();
+        }
+        boolean canSaveNote = true;
+        if (DBHelper.getTypeIdOfAsset(currentId).equals("3")) {
+            if (!NoteHandler.saveNote()){
+                MainActivity.noteCreator.openNote();
+                canSaveNote = false;
+            }
+        }
+        if (canSaveNote){
+            currentId = dbHelper.getParentId(currentId);
+            adapter.reinitializeGridAdapter();
+        }
+    }
+
+
+    @Override
+    public void onBackPressed() {
+       backButtonProcess();
+    }
+
 }
