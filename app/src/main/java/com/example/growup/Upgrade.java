@@ -20,7 +20,9 @@ public class Upgrade {
                     lastVersion();
             }
         } else if (savedVersionCode > currentVersionCode) {
+            MainActivity.activity.runOnUiThread(() -> {
             Toast.makeText(MainActivity.activity, "Please install last version of App", Toast.LENGTH_SHORT).show();
+        });
         }
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("currentVersionCode", currentVersionCode);

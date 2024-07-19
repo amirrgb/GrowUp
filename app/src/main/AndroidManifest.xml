@@ -23,7 +23,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/note"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/note"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         tools:targetApi="31"

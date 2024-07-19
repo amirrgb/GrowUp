@@ -41,7 +41,7 @@ public class GridAdapter extends BaseAdapter {
         MainActivity.noteCreator.createNoteButton();
         notifyDataSetChanged();
         MainActivity.gridView.setAdapter(MainActivity.adapter);
-        Setting.setListenerForSettingButton();
+        Setting.setListenerForButtons();
         updateHeader();
     }
 
@@ -139,7 +139,9 @@ public class GridAdapter extends BaseAdapter {
                 folderIcons.add(R.drawable.ic_folder);
                 if (!MainActivity.dbHelper.insertIntoAssetsTable(newFolderName
                         , MainActivity.dbHelper.getTypeId("folder"), MainActivity.currentId)){
+                    MainActivity.activity.runOnUiThread(() -> {
                     Toast.makeText(mContext, "cant create Folder", Toast.LENGTH_SHORT).show();
+                    });
                 };
                 MainActivity.adapter.updateGridAdapter();
             }

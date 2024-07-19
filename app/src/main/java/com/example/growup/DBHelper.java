@@ -9,7 +9,7 @@ import net.sqlcipher.database.SQLiteOpenHelper;
 import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "GrowUpDataBase";
+    private static final String DATABASE_NAME = MainActivity.activity.getResources().getString(R.string.DataBase_Name);
     public static final int DATABASE_VERSION = 12;
     public static SQLiteDatabase dbReadable;
     public static SQLiteDatabase dbWritable;
@@ -45,12 +45,40 @@ public class DBHelper extends SQLiteOpenHelper {
                 "content TEXT," +
                 "FOREIGN KEY (id) REFERENCES ASSETS(id) ON DELETE CASCADE)";
         sqLiteDatabase.execSQL(Notes);
+        String Accounts = "CREATE TABLE IF NOT EXISTS ACCOUNTS(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "Email TEXT UNIQUE," +
+                "RefreshToken TEXT," +
+                "folderId TEXT)";
+        sqLiteDatabase.execSQL(Accounts);
     }
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {}
 
+    public static boolean insertIntoAccountsTable(String email,String refreshToken,String folderId){
+        try {
+            dbWritable.beginTransaction();
+            String sqlQuery = "INSERT INTO ACCOUNTS (Email, RefreshToken, folderId) VALUES (?,?,?)";
+            dbWritable.execSQL(sqlQuery,new Object[]{email,refreshToken,folderId});
+            dbWritable.setTransactionSuccessful();
+        }catch (SQLiteConstraintException e){
+            MainActivity.activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.activity, "Duplicate Account", Toast.LENGTH_SHORT).show();
+                }
+            });
+            return false;
+        }catch (Exception e){
+            LogHandler.saveLog("Failed to insert into Accounts table : " + e.getLocalizedMessage(),true);
+            return false;
+        } finally {
+            dbWritable.endTransaction();
+        }
+        return true;
     }
 
+    //should change to protected from sql injection
     public boolean insertIntoAssetsTable(String keyword, String typeId, int pid){
         try {
             dbWritable.beginTransaction();
@@ -70,6 +98,7 @@ public class DBHelper extends SQLiteOpenHelper {
             return false;
         } finally {
             dbWritable.endTransaction();
+            BackUpDataBase.backUpDataBaseToDrive();
         }
         return true;
     }
@@ -121,6 +150,7 @@ public class DBHelper extends SQLiteOpenHelper {
             LogHandler.saveLog("Failed to update ASSETS table : " + e.getLocalizedMessage(),true);
         } finally {
             dbWritable.endTransaction();
+            BackUpDataBase.backUpDataBaseToDrive();
         }
     }
 
@@ -232,5 +262,20 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return typeId;
+    }
+
+    public static GoogleCloud.signInResult getAccount(){
+        String sqlQuery = "SELECT Email,RefreshToken,folderId FROM ACCOUNTS";
+        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{});
+        String email = "";
+        String refreshToken = "";
+        String folderId = "";
+        if (cursor != null && cursor.moveToFirst()){
+            email =  cursor.getString(0);
+            refreshToken = cursor.getString(1);
+            folderId = cursor.getString(2);
+        }
+        cursor.close();
+        return new GoogleCloud.signInResult(email,refreshToken,folderId);
     }
 }
