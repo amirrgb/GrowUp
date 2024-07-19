@@ -7,6 +7,7 @@
     app:cardElevation="8dp"
     app:cardUseCompatPadding="true"
     app:cardPreventCornerOverlap="false">
+    <include layout="@layout/header" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,22 +34,5 @@
             android:textColor="@color/black"
             android:layout_marginBottom="8dp"/>
     </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/save_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="Save Note"
-        android:src="@drawable/save"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="false"
-        android:layout_alignParentRight="true"
-        android:tint="@android:color/white"
-        app:backgroundTint="@color/black"
-        app:layout_anchorGravity="bottom|end" />
-
 
 </androidx.cardview.widget.CardView>

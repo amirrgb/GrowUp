@@ -9,26 +9,27 @@
     android:background="?attr/colorPrimary"
     tools:targetApi="n">
 
-    <TextView
-        android:id="@+id/headerTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:gravity="center"
-        android:paddingStart="5dp"
-        android:text="               Home"
-        android:textColor="@color/white"
-        tools:ignore="HardcodedText" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/back_button"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_gravity="end"
-        android:background="@drawable/ic_back_button"
+        android:id="@+id/setting_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="start"
+        android:background="@drawable/app_setting"
         android:textAllCaps="false"
         android:textColor="@color/black"
         tools:ignore="HardcodedText">
     </androidx.appcompat.widget.AppCompatButton>
+
+    <TextView
+        android:id="@+id/headerTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingStart="5dp"
+        android:text="Home"
+        android:textColor="@color/white"
+        tools:ignore="HardcodedText" />
 
 </androidx.appcompat.widget.Toolbar>

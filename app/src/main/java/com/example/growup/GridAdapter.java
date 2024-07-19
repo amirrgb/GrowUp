@@ -34,7 +34,6 @@ public class GridAdapter extends BaseAdapter {
         readChildItemsOf(MainActivity.currentId);
         mContext = MainActivity.activity;
         MainActivity.noteCreator.createNoteButton();
-        set_back_button();
     }
 
     public void updateGridAdapter() {
@@ -42,10 +41,11 @@ public class GridAdapter extends BaseAdapter {
         MainActivity.noteCreator.createNoteButton();
         notifyDataSetChanged();
         MainActivity.gridView.setAdapter(MainActivity.adapter);
+        Setting.setListenerForSettingButton();
         updateHeader();
     }
 
-    public void reinitializeGridAdapter() {
+    public static void reinitializeGridAdapter() {
         MainActivity.activity.setContentView(R.layout.activity_main);
         MainActivity.gridView = MainActivity.activity.findViewById(R.id.gridView);
         MainActivity.adapter = new GridAdapter();
@@ -192,25 +192,16 @@ public class GridAdapter extends BaseAdapter {
 //        notifyDataSetChanged();
     }
 
-    public void set_back_button() {
-        AppCompatButton backButton = MainActivity.activity.findViewById(R.id.back_button);
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MainActivity.currentId = MainActivity.dbHelper.getParentId(MainActivity.currentId);
-                MainActivity.adapter.updateGridAdapter();
-            }
-        });
-    }
-
 
     public void updateHeader(){
         TextView header = MainActivity.activity.findViewById(R.id.headerTextView);
         if (MainActivity.currentId == 0){
             header.setText("Home");
+            MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.app_setting);
             return;
         }
         String headerText = MainActivity.dbHelper.getAsset(String.valueOf(MainActivity.currentId))[2];
         header.setText(headerText);
+        MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
     }
 }

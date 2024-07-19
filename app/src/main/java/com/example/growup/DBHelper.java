@@ -156,6 +156,9 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int getParentId(int id){
+        if (id == 0){
+            return 0;
+        }
         String sqlQuery = "SELECT pid FROM ASSETS WHERE id=?";
         Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(id)});
         int parentId = 0;
@@ -220,5 +223,14 @@ public class DBHelper extends SQLiteOpenHelper {
         return lastId;
     }
 
-
+    public static String getTypeIdOfAsset(int currentId){
+        String sqlQuery = "SELECT typeId FROM ASSETS WHERE id=?";
+        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(currentId)});
+        String typeId = "";
+        if (cursor != null && cursor.moveToFirst()) {
+            typeId = cursor.getString(0);
+        }
+        cursor.close();
+        return typeId;
+    }
 }
