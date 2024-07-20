@@ -14,6 +14,9 @@ import java.util.concurrent.Future;
 public class BackUpDataBase {
 
     public static boolean backUpDataBaseToDrive() {
+        if (!MainActivity.isLinkedToGoogleDrive){
+            return false;
+        }
         Context context = MainActivity.activity.getApplicationContext();
         String dataBasePath = context.getDatabasePath(MainActivity.activity.getString(R.string.DataBase_Name)).getPath();
         final boolean[] isBackedUp = {false};
@@ -67,6 +70,26 @@ public class BackUpDataBase {
             return uploadFileId;
         }
     }
+
+    public static boolean isLinkedToGoogleDrive(){
+        try {
+            String refreshToken = DBHelper.getAccount().getRefreshToken();
+            if (refreshToken == null || refreshToken.isEmpty()) {
+                return false;
+            }
+            String accessToken = MainActivity.googleCloud.updateAccessToken(refreshToken);
+            if (accessToken == null || accessToken.isEmpty()) {
+                return false;
+            }
+            if (GoogleCloud.isAccessTokenValid(accessToken)) {
+                return true;
+            }
+        }catch (Exception e){
+            LogHandler.saveLog("Failed to check linked to Google Drive: " + e.getLocalizedMessage(), true);
+        }
+        return false;
+    }
+
 
 //    public static boolean isUploadHashEqual(String fileHash, String driveFileId, String accessToken){
 //        ExecutorService executor = Executors.newSingleThreadExecutor();

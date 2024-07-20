@@ -12,8 +12,13 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        System.out.println("I received new alarm , this title is :");
         String title = intent.getStringExtra("title");
         String message = intent.getStringExtra("message");
+        System.out.println(title);
+        System.out.println(message);
+
+
 
         createNotificationChannel(context);
 
