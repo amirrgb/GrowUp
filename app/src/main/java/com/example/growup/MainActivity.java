@@ -41,37 +41,21 @@ public class MainActivity extends AppCompatActivity {
     public static GridView gridView;
     public static NoteHandler noteCreator;
     public static ActivityResultLauncher<Intent> signInToBackUpLauncher;
+    public static boolean isLinkedToGoogleDrive = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         activity = this;
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        manageAccessThread.start();
-        try {
-            manageAccessThread.join();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        manageReadAndWritePermissonsThread.start();
-        try {
-            manageReadAndWritePermissonsThread.join();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        checkPermissions(); // can copy from stash
         LogHandler.CreateLogFile();
-        LogHandler.saveLog("--------------------------new run----------------------------", false);
+        isLinkedToGoogleDrive = BackUpDataBase.isLinkedToGoogleDrive();
         preferences = getPreferences(Context.MODE_PRIVATE);
         dbHelper = new DBHelper(this);
         Upgrade.versionHandler(preferences);
-        dbHelper.insertIntoTypesTable("2","folder","ic_folder");
-        dbHelper.insertIntoTypesTable("3","note","ic_note");
         googleCloud = new GoogleCloud(this);
         noteCreator = new NoteHandler();
-        gridView = findViewById(R.id.gridView);
-        adapter = new GridAdapter();
-        gridView.setAdapter(adapter);
-
+        GridAdapter.initializeGridAdapter();
     }
 
     @Override
@@ -94,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
                                     });
                                     return;
                                 }
-                                DBHelper.insertIntoAccountsTable(signInResult.getUserEmail(),signInResult.getRefreshToken(),signInResult.getFolderId());
+                                isLinkedToGoogleDrive = DBHelper.insertIntoAccountsTable(signInResult.getUserEmail(),signInResult.getRefreshToken(),signInResult.getFolderId());
                             }
                         });
                         signInToBackUpThread.start();
@@ -105,11 +89,10 @@ public class MainActivity extends AppCompatActivity {
             });
 
 
-
+        LogHandler.saveLog("time of setting Alarm",false);
         AlarmHandler alarmHandler = new AlarmHandler(this);
-
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MINUTE, 5);
+        calendar.add(Calendar.SECOND, 15);
         alarmHandler.setAlarm(calendar.getTimeInMillis(), 0, "Reminder", "This is your reminder");
 
         // Cancel the alarm
@@ -126,61 +109,78 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    Thread manageAccessThread = new Thread() {
-        @Override
-        public void run() {
-            try {
-                int buildSdkInt = Build.VERSION.SDK_INT;
-                if (buildSdkInt >= 30) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        if (!Environment.isExternalStorageManager()) {
-                            Intent getPermission = new Intent();
-                            getPermission.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                            startActivity(getPermission);
-                            while (!Environment.isExternalStorageManager()){
-                                System.out.println("here " + Environment.isExternalStorageManager());
-                                try {
-                                    Thread.sleep(1000);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+
+
+    public void checkPermissions(){
+        Thread manageAccessThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    int buildSdkInt = Build.VERSION.SDK_INT;
+                    if (buildSdkInt >= 30) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            if (!Environment.isExternalStorageManager()) {
+                                Intent getPermission = new Intent();
+                                getPermission.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                                activity.startActivity(getPermission);
+                                while (!Environment.isExternalStorageManager()){
+                                    System.out.println("here " + Environment.isExternalStorageManager());
+                                    try {
+                                        Thread.sleep(1000);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
                         }
                     }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        if (Environment.isExternalStorageManager()) {
+                            System.out.println("Starting to get access from your android device");
+                        }}
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    if (Environment.isExternalStorageManager()) {
-                        System.out.println("Starting to get access from your android device");
-                    }}
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }
-    };
+        };
 
-    Thread manageReadAndWritePermissonsThread = new Thread() {
-        @Override
-        public void run() {
-            if (true){
-                int requestCode =1;
-                String[] permissions = {
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                };
-                boolean isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
-                        (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
-                while(!isWriteAndReadPermissionGranted){
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                            (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED |
-                                    ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
-                        ActivityCompat.requestPermissions(MainActivity.this, permissions, requestCode);
+        Thread manageReadAndWritePermissonsThread = new Thread() {
+            @Override
+            public void run() {
+                if (true){
+                    int requestCode =1;
+                    String[] permissions = {
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    };
+                    boolean isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
+                            (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+                    while(!isWriteAndReadPermissionGranted){
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                                (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED |
+                                        ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
+                            ActivityCompat.requestPermissions(activity, permissions, requestCode);
+                        }
+                        isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
+                                (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
                     }
-                    isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
-                            (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
                 }
             }
+        };
+        manageAccessThread.start();
+        try {
+            manageAccessThread.join();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    };
+        manageReadAndWritePermissonsThread.start();
+        try {
+            manageReadAndWritePermissonsThread.join();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
 
     public static void backButtonProcess(){
         if (dbHelper.getParentId(currentId) == 0){
@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (canSaveNote){
             currentId = dbHelper.getParentId(currentId);
-            adapter.reinitializeGridAdapter();
+            adapter.initializeGridAdapter();
         }
     }
     @Override
@@ -226,5 +226,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    // should be complete and tested
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        GridAdapter.initializeGridAdapter();
+    }
+
 
 }

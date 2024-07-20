@@ -23,6 +23,7 @@ import com.google.api.services.drive.Drive;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -278,4 +279,34 @@ public class GoogleCloud extends AppCompatActivity {
         return service;
     }
 
+    public static boolean isAccessTokenValid(String accessToken) throws IOException {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Callable<Boolean> callableTask = () -> {
+            String tokenInfoUrl = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + accessToken;
+            URL url = new URL(tokenInfoUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+
+                LogHandler.saveLog("access token validity " + response, false);
+                return !response.toString().contains("error");
+            } finally {
+                connection.disconnect();
+            }
+        };
+        Future<Boolean> future = executor.submit(callableTask);
+        Boolean isValid = false;
+        try{
+            isValid = future.get();
+        }catch (Exception e){
+            LogHandler.saveLog("Failed to check validity from future in isAccessTokenValid: " + e.getLocalizedMessage(), true);
+        }
+        return isValid;
+    }
 }

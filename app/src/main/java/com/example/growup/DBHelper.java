@@ -53,13 +53,18 @@ public class DBHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(Accounts);
         String Reminders = "CREATE TABLE IF NOT EXISTS REMINDERS(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "assetId INTEGER," +
                 "title TEXT," +
                 "message TEXT," +
                 "date TEXT," +
                 "time TEXT," +
                 "priority TEXT)";
         sqLiteDatabase.execSQL(Reminders);
+
+        insertIntoTypesTable("2","folder","ic_folder");
+        insertIntoTypesTable("3","note","ic_note");
     }
+
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {}
 
@@ -111,13 +116,16 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public static boolean insertIntoRemindersTable(String title,String message, String date
+    public static boolean insertIntoRemindersTable(String assetId,String title,String message, String date
             , String time,String priority){
         try {
             dbWritable.beginTransaction();
-            String sqlQuery = "INSERT INTO 
+            String sqlQuery = "INSERT INTO REMINDERS (assetId, title, message, date, time, priority) VALUES (?,?,?,?,?,?)";
+            dbWritable.execSQL(sqlQuery, new Object[]{assetId,title, message, date, time, priority});
+            dbWritable.setTransactionSuccessful();
+            return true;
         }catch (Exception e){
-
+            LogHandler.saveLog("Failed to insert into REMINDERS table : " + e.getLocalizedMessage(),true);
         }
         return false;
     }

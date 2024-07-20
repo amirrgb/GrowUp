@@ -28,7 +28,7 @@ public class NoteHandler {
                         String noteName = input.getText().toString();
                         if (noteName.equals("")) {
                             MainActivity.activity.runOnUiThread(() -> {
-                            Toast.makeText(MainActivity.activity, "Note name cannot be empty", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.activity, "Note name cannot be empty", Toast.LENGTH_SHORT).show();
                             });
                         } else {
                             if (MainActivity.dbHelper.insertIntoAssetsTable(noteName,
@@ -36,13 +36,13 @@ public class NoteHandler {
                                 String lastId = MainActivity.dbHelper.getLastId();
                                 MainActivity.dbHelper.insertIntoNotesTable(lastId, noteName, "");
                                 MainActivity.activity.runOnUiThread(() -> {
-                                Toast.makeText(MainActivity.activity, "Note created", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(MainActivity.activity, "Note created", Toast.LENGTH_SHORT).show();
                                 });
                                 MainActivity.adapter.readChildItemsOf(MainActivity.currentId);
                                 MainActivity.adapter.updateGridAdapter();
                             }else{
                                 MainActivity.activity.runOnUiThread(() -> {
-                                Toast.makeText(MainActivity.activity, "cant create Note", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(MainActivity.activity, "cant create Note", Toast.LENGTH_SHORT).show();
                                 });
                             }
                         }

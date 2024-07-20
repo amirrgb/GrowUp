@@ -41,6 +41,8 @@ public class LogHandler extends Application {
             }
         } catch (Exception e) {
             System.out.println("error in creating log file in existing directory" + e.getLocalizedMessage());
+        }finally {
+            LogHandler.saveLog("--------------------------new run----------------------------", false);
         }
     }
 
@@ -69,10 +71,10 @@ public class LogHandler extends Application {
                 String logEntry;
                 if (isError) {
                     logEntry = "err " + timestamp + " --------- " + text;
-                    System.out.println("Err IS SAVED: " + text);
+                    System.out.println("Err IS SAVED: " + logEntry);
                 } else {
                     logEntry = "log " + timestamp + " --------- " + text;
-                    System.out.println("LOG IS SAVED: " + text);
+                    System.out.println("LOG IS SAVED: " + logEntry);
                 }
                 existingLines.add(Math.min(2, existingLines.size()), logEntry);
 
