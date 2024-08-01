@@ -22,6 +22,7 @@ public class LogHandler extends Application {
     public static String logFileName = MainActivity.activity.getResources().getString(R.string.logFile_Name);
 
     public static void CreateLogFile() {
+
         try {
             File logDir = new File(LOG_DIR_PATH);
             if (!logDir.exists()) {

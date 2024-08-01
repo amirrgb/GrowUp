@@ -43,7 +43,7 @@ public class Setting {
 
         MenuItem syncToGoogleDriveItem = navigationView.getMenu().findItem(R.id.navMenuItem2);
         String gmail_text = "Sync To Google Drive";
-        if (DBHelper.getAccount().getUserEmail() != ""){
+        if (MainActivity.isLinkedToGoogleDrive){
             gmail_text = DBHelper.getAccount().getUserEmail() + "@gmail.com";
         }
         centeredText = new SpannableString(gmail_text);
@@ -81,11 +81,16 @@ public class Setting {
             }
         });
 
-        Button button = MainActivity.activity.findViewById(R.id.sync_button);
-        button.setOnClickListener(view -> {
+        Button sync_to_google_drive_button = MainActivity.activity.findViewById(R.id.sync_button);
+        sync_to_google_drive_button.setOnClickListener(view -> {
+
+            if (MainActivity.isLinkedToGoogleDrive){
+                MainActivity.activity.runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.activity, "you already have login to google", Toast.LENGTH_SHORT).show();});
+                return;
+            }
             MainActivity.activity.runOnUiThread(() -> {
-                Toast.makeText(MainActivity.activity, "Please Wait To Load Google Page", Toast.LENGTH_SHORT).show();
-            });
+                Toast.makeText(MainActivity.activity, "Please Wait To Load Google Page", Toast.LENGTH_SHORT).show();});
             MainActivity.googleCloud.signInToGoogleCloud(MainActivity.signInToBackUpLauncher)
             ;});
     }
