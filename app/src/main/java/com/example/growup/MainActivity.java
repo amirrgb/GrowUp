@@ -41,20 +41,24 @@ public class MainActivity extends AppCompatActivity {
     public static GridView gridView;
     public static NoteHandler noteCreator;
     public static ActivityResultLauncher<Intent> signInToBackUpLauncher;
-    public static boolean isLinkedToGoogleDrive = false;
+    public static boolean isLinkedToGoogleDrive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         activity = this;
         super.onCreate(savedInstanceState);
-        checkPermissions(); // can copy from stash
+        new Thread(MainActivity::checkPermissions).start();
+//        checkPermissions(); // can copy from stash
+
         LogHandler.CreateLogFile();
-        isLinkedToGoogleDrive = BackUpDataBase.isLinkedToGoogleDrive();
+
+
         preferences = getPreferences(Context.MODE_PRIVATE);
         dbHelper = new DBHelper(this);
         Upgrade.versionHandler(preferences);
         googleCloud = new GoogleCloud(this);
         noteCreator = new NoteHandler();
+        isLinkedToGoogleDrive = BackUpDataBase.isLinkedToGoogleDrive();
         GridAdapter.initializeGridAdapter();
     }
 
@@ -65,21 +69,19 @@ public class MainActivity extends AppCompatActivity {
 
         signInToBackUpLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             result -> {
+                System.out.println("result code of signIn launcher is : " + result.getResultCode());
                 if(result.getResultCode() == RESULT_OK){
                     try{
-                        Thread signInToBackUpThread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                final GoogleCloud.signInResult signInResult =
-                                        googleCloud.handleSignInThread(result.getData());
-                                if (signInResult.getUserEmail() == null || signInResult.getFolderId() == null){
-                                    MainActivity.activity.runOnUiThread(() -> {
-                                    Toast.makeText(MainActivity.this, "Login Failed (Because of VPN) Try Again ): ", Toast.LENGTH_SHORT).show();
-                                    });
-                                    return;
-                                }
-                                isLinkedToGoogleDrive = DBHelper.insertIntoAccountsTable(signInResult.getUserEmail(),signInResult.getRefreshToken(),signInResult.getFolderId());
+                        Thread signInToBackUpThread = new Thread(() -> {
+                            final GoogleCloud.signInResult signInResult =
+                                    googleCloud.handleSignInThread(result.getData());
+                            if (signInResult.getUserEmail() == null || signInResult.getFolderId() == null){
+                                MainActivity.activity.runOnUiThread(() -> {
+                                Toast.makeText(MainActivity.this, "Login Failed (Because of VPN) Try Again ): ", Toast.LENGTH_SHORT).show();
+                                });
+                                return;
                             }
+                            isLinkedToGoogleDrive = DBHelper.insertIntoAccountsTable(signInResult.getUserEmail(),signInResult.getRefreshToken(),signInResult.getFolderId());
                         });
                         signInToBackUpThread.start();
                     }catch (Exception e){
@@ -88,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+        if (isLinkedToGoogleDrive){new Thread(BackUpDataBase::backUpDataBaseToDrive).start();}
+
 
         LogHandler.saveLog("time of setting Alarm",false);
         AlarmHandler alarmHandler = new AlarmHandler(this);
@@ -95,23 +99,12 @@ public class MainActivity extends AppCompatActivity {
         calendar.add(Calendar.SECOND, 15);
         alarmHandler.setAlarm(calendar.getTimeInMillis(), 0, "Reminder", "This is your reminder");
 
-        // Cancel the alarm
-        // alarmHandler.cancelAlarm(0);
-
-
-
-
-
-
-
-
-
 
     }
 
 
 
-    public void checkPermissions(){
+    public static void checkPermissions(){
         Thread manageAccessThread = new Thread() {
             @Override
             public void run() {

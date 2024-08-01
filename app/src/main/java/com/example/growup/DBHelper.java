@@ -21,6 +21,8 @@ public class DBHelper extends SQLiteOpenHelper {
         dbReadable = getReadableDatabase(ENCRYPTION_KEY);
         dbWritable = getReadableDatabase(ENCRYPTION_KEY);
         onCreate(getWritableDatabase(ENCRYPTION_KEY));
+        insertIntoTypesTable("2","folder","ic_folder");
+        insertIntoTypesTable("3","note","ic_note");
     }
 
     @Override
@@ -60,9 +62,6 @@ public class DBHelper extends SQLiteOpenHelper {
                 "time TEXT," +
                 "priority TEXT)";
         sqLiteDatabase.execSQL(Reminders);
-
-        insertIntoTypesTable("2","folder","ic_folder");
-        insertIntoTypesTable("3","note","ic_note");
     }
 
     @Override
@@ -111,7 +110,6 @@ public class DBHelper extends SQLiteOpenHelper {
             return false;
         } finally {
             dbWritable.endTransaction();
-            BackUpDataBase.backUpDataBaseToDrive();
         }
         return true;
     }
@@ -129,6 +127,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return false;
     }
+
     public void insertIntoTypesTable(String id,String type,String icon_name){
         try {
             dbWritable.beginTransaction();
@@ -176,7 +175,6 @@ public class DBHelper extends SQLiteOpenHelper {
             LogHandler.saveLog("Failed to update ASSETS table : " + e.getLocalizedMessage(),true);
         } finally {
             dbWritable.endTransaction();
-            BackUpDataBase.backUpDataBaseToDrive();
         }
     }
 
@@ -232,6 +230,7 @@ public class DBHelper extends SQLiteOpenHelper {
         dbWritable.setTransactionSuccessful();
         dbWritable.endTransaction();
     }
+
     public ArrayList<String[]> getAssetIdByPid(int pid){
         ArrayList<String[]> assets = new ArrayList<>();
         try{
@@ -291,17 +290,30 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public static GoogleCloud.signInResult getAccount(){
-        String sqlQuery = "SELECT Email,RefreshToken,folderId FROM ACCOUNTS";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{});
-        String email = "";
-        String refreshToken = "";
-        String folderId = "";
-        if (cursor != null && cursor.moveToFirst()){
-            email =  cursor.getString(0);
-            refreshToken = cursor.getString(1);
-            folderId = cursor.getString(2);
+        try{
+            String sqlQuery = "SELECT Email,RefreshToken,folderId FROM ACCOUNTS";
+            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{});
+            String email = null;
+            String refreshToken = null;
+            String folderId = null;
+
+            if (cursor != null && cursor.moveToFirst()){
+                do{
+                    email =  cursor.getString(0);
+                    refreshToken = cursor.getString(1);
+                    folderId = cursor.getString(2);
+                    System.out.println("in accounts table : " +
+                            "\nemail : " + email +
+                            "\nrefresh token : " +refreshToken +
+                            "\nfolderId : " + folderId
+                            );
+                    cursor.close();
+                    return new GoogleCloud.signInResult(email,refreshToken,folderId);
+                }while(cursor.moveToNext());
+            }
+        }catch (Exception e){
+            LogHandler.saveLog("failed to get account from database : " +e.getLocalizedMessage(), true);
         }
-        cursor.close();
-        return new GoogleCloud.signInResult(email,refreshToken,folderId);
+        return null;
     }
 }

@@ -41,6 +41,7 @@ public class GoogleCloud extends AppCompatActivity {
     public GoogleCloud(FragmentActivity activity){
         this.activity = activity;
     }
+
     public void signInToGoogleCloud(ActivityResultLauncher<Intent> signInLauncher) {
         boolean forceCodeForRefreshToken = true;
         try {
@@ -50,7 +51,7 @@ public class GoogleCloud extends AppCompatActivity {
                             new Scope("https://www.googleapis.com/auth/drive.file"),
                             new Scope("https://www.googleapis.com/auth/photoslibrary.appendonly")
                     )
-                    .requestServerAuthCode(activity.getResources().getString(R.string.web_client_id), forceCodeForRefreshToken)
+                    .requestServerAuthCode(activity.getResources().getString(R.string.client_id), forceCodeForRefreshToken)
                     .requestEmail()
                     .build();
             googleSignInClient = GoogleSignIn.getClient(activity, googleSignInOptions);
@@ -59,44 +60,47 @@ public class GoogleCloud extends AppCompatActivity {
                 signInLauncher.launch(signInIntent);
             });
         } catch (Exception e){
-            LogHandler.saveLog("login failed in signInGoogleCloud : "+e.getLocalizedMessage(),true);
+            LogHandler.saveLog("login failed in signInGoogleCloud : " + e.getLocalizedMessage(),true);
         }
     }
+
     public signInResult handleSignInThread(Intent data){
         final GoogleCloud.signInResult[] signInResult = new signInResult[1];
-        Thread signInResultThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+        Thread signInResultThread = new Thread(() -> {
+            try{
+                System.out.println("can reach here 1");
+                String userEmail = null;
+                String refreshToken = null;
+                String folderId;
                 try{
-                    String userEmail = null;
-                    String refreshToken = null;
-                    String folderId = null;
-                    try{
-                        Task<GoogleSignInAccount> googleSignInTask = GoogleSignIn.getSignedInAccountFromIntent(data);
-                        GoogleSignInAccount account = googleSignInTask.getResult(ApiException.class);
-                        userEmail = account.getEmail();
-
-                        if (userEmail != null && userEmail.toLowerCase().endsWith("@gmail.com")) {
-                            userEmail = userEmail.replace("@gmail.com", "");
-                        }
-
-                        String authCode = account.getServerAuthCode();
-                        refreshToken = getRefreshTokenByAuthCode(authCode);
-                        if (refreshToken != null) {
-                            folderId = createGrowUpFolderInDrive(initializeDrive(updateAccessToken(refreshToken)));
-                            signInResult[0] = new signInResult(userEmail,refreshToken,folderId);
-                        }
-                    }catch (Exception e){
-                        LogHandler.saveLog("handle back up sign in result failed: " + e.getLocalizedMessage(), true);
+                    System.out.println("can reach here 2");
+                    Task<GoogleSignInAccount> googleSignInTask = GoogleSignIn.getSignedInAccountFromIntent(data);
+                    System.out.println("can reach here 3");
+                    GoogleSignInAccount account = googleSignInTask.getResult(ApiException.class);
+                    System.out.println("can reach here 4");
+                    userEmail = account.getEmail();
+                    System.out.println("can reach here 5");
+                    if (userEmail != null && userEmail.toLowerCase().endsWith("@gmail.com")) {
+                        userEmail = userEmail.replace("@gmail.com", "");
                     }
+                    System.out.println("can reach here 6");
+                    String authCode = account.getServerAuthCode();
+                    System.out.println("can reach here 7");
+                    refreshToken = getRefreshTokenByAuthCode(authCode);
                     if (refreshToken != null) {
                         folderId = createGrowUpFolderInDrive(initializeDrive(updateAccessToken(refreshToken)));
                         signInResult[0] = new signInResult(userEmail,refreshToken,folderId);
                     }
-
                 }catch (Exception e){
-                    LogHandler.saveLog("Failed to join and run sign in to backUp thread : " + e.getLocalizedMessage(), true);
+                    LogHandler.saveLog("handle back up sign in result failed: " + e.getLocalizedMessage(), true);
                 }
+                if (refreshToken != null) {
+                    folderId = createGrowUpFolderInDrive(initializeDrive(updateAccessToken(refreshToken)));
+                    signInResult[0] = new signInResult(userEmail,refreshToken,folderId);
+                }
+
+            }catch (Exception e){
+                LogHandler.saveLog("Failed to join and run sign in to backUp thread : " + e.getLocalizedMessage(), true);
             }
         });
         signInResultThread.start();
@@ -107,6 +111,7 @@ public class GoogleCloud extends AppCompatActivity {
         }
         return signInResult[0];
     }
+
     private String getRefreshTokenByAuthCode(String authCode){
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Callable<String> backgroundTokensTask = () -> {
@@ -126,7 +131,7 @@ public class GoogleCloud extends AppCompatActivity {
                 byte[] postData = requestBody.getBytes(StandardCharsets.UTF_8);
                 httpURLConnection.setRequestMethod("POST");
                 httpURLConnection.setRequestProperty("Content-Length", String.valueOf(postData.length));
-//                httpURLConnection.setRequestProperty("Host", "oauth2.googleapis.com");//this line seems to be extra
+                httpURLConnection.setRequestProperty("Host", "oauth2.googleapis.com");//this line seems to be extra
                 httpURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 System.out.println("checking 4");
                 httpURLConnection.setDoInput(true);
@@ -175,6 +180,7 @@ public class GoogleCloud extends AppCompatActivity {
         }
         return tokens_fromFuture;
     }
+
     public static class signInResult{
         private final String userEmail;
         private String refreshToken;
@@ -189,6 +195,7 @@ public class GoogleCloud extends AppCompatActivity {
         public String getRefreshToken() {return refreshToken;}
         public String getFolderId() {return folderId;}
     }
+
     public String updateAccessToken(String refreshToken){
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Callable<String> backgroundTokensTask = () -> {
@@ -244,6 +251,7 @@ public class GoogleCloud extends AppCompatActivity {
         }
         return tokens_fromFuture;
     }
+
     private static String createGrowUpFolderInDrive(Drive service){
         String growUpFolderId = "";
         try{
@@ -259,6 +267,7 @@ public class GoogleCloud extends AppCompatActivity {
         }
         return growUpFolderId;
     }
+
     public static Drive initializeDrive(String accessToken){
         Drive service = null;
         try{
@@ -309,4 +318,5 @@ public class GoogleCloud extends AppCompatActivity {
         }
         return isValid;
     }
+
 }
