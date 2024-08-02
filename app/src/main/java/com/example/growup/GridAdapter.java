@@ -60,26 +60,16 @@ public class GridAdapter extends BaseAdapter {
         if (!assets.isEmpty()) {
             //sort first folders then notes (todo)
             for (String[] asset : assets) {
-                String assetId = asset[0];
+                int assetId = Integer.parseInt(asset[0]);
                 String keyword = asset[1];
-                String typeId = asset[2];
-                String folder_typeId = MainActivity.dbHelper.getTypeId("folder");
-                String note_typeId = MainActivity.dbHelper.getTypeId("note");
-                if (typeId.equals(folder_typeId)) {
-                    assetsName.add(keyword);
-                    assetsIcon.add(R.drawable.ic_folder);
-                    assetsId.add(Integer.valueOf(assetId));
-                } else if (typeId.equals(note_typeId)) {
-                    assetsName.add(keyword);
-                    assetsIcon.add(R.drawable.note);
-                    assetsId.add(Integer.valueOf(assetId));
-                }
+                assetsId.add(assetId);
+                assetsName.add(keyword);
+                assetsIcon.add(TypeHandler.getIconIdByAssetId(assetId));
             }
         }
         assetsName.add("Add Folder");
         assetsIcon.add(R.drawable.ic_add_folder);
         assetsId.add(tempAssetId);
-//        notifyDataSetChanged();
     }
 
     public void updateHeader(){
@@ -136,12 +126,21 @@ public class GridAdapter extends BaseAdapter {
     private void itemsActions(int position) {
         if (assetsIcon.get(position) == R.drawable.ic_add_folder) {
             showAddFolderDialog();
-        }else if (assetsIcon.get(position) == R.drawable.ic_folder) {
-            MainActivity.currentId = assetsId.get(position);
-            MainActivity.adapter.updateGridAdapter();
-        } else if (assetsIcon.get(position) == R.drawable.note) {
-            MainActivity.currentId = assetsId.get(position);
-            MainActivity.noteCreator.openNote();
+            return;
+        }
+
+        int assetId = assetsId.get(position);
+        switch (TypeHandler.getTypeNameByAssetId(assetId)) {
+            case "note":
+                MainActivity.currentId = assetsId.get(position);
+                MainActivity.noteCreator.openNote();
+                break;
+            case "folder":
+                MainActivity.currentId = assetsId.get(position);
+                MainActivity.adapter.updateGridAdapter();
+                break;
+            default:
+                break;
         }
     }
 
@@ -155,16 +154,12 @@ public class GridAdapter extends BaseAdapter {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String newFolderName = input.getText().toString();
-                String typeId = MainActivity.dbHelper.getTypeId("folder");
-                boolean isCreated = MainActivity.dbHelper.insertIntoAssetsTable(newFolderName,typeId, MainActivity.currentId);
+                boolean isCreated = MainActivity.dbHelper.insertIntoAssetsTable(newFolderName,
+                        TypeHandler.getTypeIdByType("folder"), MainActivity.currentId);
                 if (!isCreated){
                     MainActivity.activity.runOnUiThread(() -> {
                         Toast.makeText(mContext, "cant create Folder", Toast.LENGTH_SHORT).show();
                     });
-                }else {
-                    assetsName.add(newFolderName);
-                    assetsIcon.add(R.drawable.ic_folder);
-                    assetsId.add(Integer.valueOf(MainActivity.dbHelper.getLastId()));
                 }
                 MainActivity.adapter.updateGridAdapter();
             }
@@ -182,14 +177,25 @@ public class GridAdapter extends BaseAdapter {
 
     public void displayPopUpMenu(int position,View gridView) {
         String[] menuItems = new String[]{};
-
-        if (assetsId.get(position) == tempAssetId) {
+        int assetId = assetsId.get(position);
+        if (assetId == tempAssetId) {
             return ;
-        }else if (assetsIcon.get(position) == R.drawable.ic_folder) {
-            menuItems = new String[]{"Rename", "Move", "Delete", "Pin", "Share"};
-        }else if (assetsIcon.get(position) == R.drawable.note) {
-            menuItems = new String[]{"Move", "Delete", "Pin", "Set Reminder", "Share"};
         }
+        switch (TypeHandler.getTypeNameByAssetId(assetId)){
+            case "folder":
+                menuItems = new String[]{"Rename", "Move", "Delete", "Pin", "Share"};
+                break;
+            case "note":
+                menuItems = new String[]{"Move", "Delete", "Pin", "Set Reminder", "Share"};
+                break;
+            case "pin_folder":
+                menuItems = new String[]{"Rename", "Move", "Delete", "UnPin", "Share"};
+                break;
+            case "pin_note":
+                menuItems = new String[]{"Move", "Delete", "UnPin", "Set Reminder", "Share"};
+                break;
+        }
+
         PopupMenu popupMenu = new PopupMenu(MainActivity.activity, gridView, Gravity.CENTER);
         for (String menuItem : menuItems) {
             popupMenu.getMenu().add(menuItem);
@@ -207,23 +213,21 @@ public class GridAdapter extends BaseAdapter {
         int assetId = assetsId.get(position);
         switch (itemTitle) {
             case "Rename":
-                System.out.println("you clicked on rename");
-                //should implement renaming logic
+                RenameItem(assetId, position);
                 break;
             case "Move":
                 System.out.println("you clicked on move");
                 //should implement moving logic
                 break;
             case "Pin":
-                System.out.println("you clicked on pin");
-//                MainActivity.gridAdapter.pinItem(MainActivity.gridView.getSelectedItemPosition());
+            case "UnPin":
+                changePinItem(position);
                 break;
             case "Set Reminder":
                 System.out.println("you clicked on set reminder");
                 //should implement setting reminder logic
                 break;
             case "Delete":
-                System.out.println("you clicked on delete");
                 deleteItem(assetId);
                 break;
             case "Share":
@@ -237,4 +241,51 @@ public class GridAdapter extends BaseAdapter {
         MainActivity.adapter.updateGridAdapter();
     }
 
+    public void RenameItem(int assetId, int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("Rename folder Folder");
+        final EditText input = new EditText(mContext);
+        input.setText(assetsName.get(position));
+        builder.setView(input);
+
+        builder.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String newFolderName = input.getText().toString();
+                MainActivity.dbHelper.updateAssetName(String.valueOf(assetId), newFolderName);
+                MainActivity.adapter.updateGridAdapter();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    public void changePinItem(int position) {
+        int assetId = assetsId.get(position);
+        String assetType = TypeHandler.getTypeNameByAssetId(assetId);
+        String newType = "";
+        switch (assetType) {
+            case "folder":
+                newType = "pin_folder";
+                break;
+            case "note":
+                newType = "pin_note";
+                break;
+            case "pin_folder":
+                newType = "folder";
+                break;
+            case "pin_note":
+                newType = "note";
+                break;
+        }
+        TypeHandler.updateAssetType(assetId, newType);
+        MainActivity.adapter.updateGridAdapter();
+    }
 }

@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
             Setting.setListenerForButtons();
         }
         boolean canSaveNote = true;
-        if (DBHelper.getTypeIdOfAsset(currentId).equals("3")) {
+        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note")) {
             if (!NoteHandler.saveNote()){
                 MainActivity.noteCreator.openNote();
                 canSaveNote = false;
@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (canSaveNote){
             currentId = dbHelper.getParentId(currentId);
-            adapter.initializeGridAdapter();
+            GridAdapter.initializeGridAdapter();
         }
     }
     @Override
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
         if (dbHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
-        if (DBHelper.getTypeIdOfAsset(currentId).equals("3")) {
+        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note")) {
             if (!NoteHandler.saveNote()){
                 MainActivity.noteCreator.openNote();
             }
@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         if (dbHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
-        if (DBHelper.getTypeIdOfAsset(currentId).equals("3")) {
+        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note")) {
             if (!NoteHandler.saveNote()){
                 MainActivity.noteCreator.openNote();
             }
