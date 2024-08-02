@@ -1,8 +1,5 @@
 package com.example.growup;
 
-
-import static com.example.growup.DBHelper.getAssetLastUpdateTime;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -17,9 +14,7 @@ import android.widget.Toast;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 
@@ -127,6 +122,8 @@ public class GridAdapter extends BaseAdapter {
             return true;
         });
 
+        //drag and drop
+
         return gridView;
     }
 
@@ -139,10 +136,12 @@ public class GridAdapter extends BaseAdapter {
 
         int assetId = assetsId.get(position);
         switch (TypeHandler.getTypeNameByAssetId(assetId)) {
+            case "pin_note":
             case "note":
                 MainActivity.currentId = assetsId.get(position);
                 MainActivity.noteCreator.openNote();
                 break;
+            case "pin_folder" :
             case "folder":
                 MainActivity.currentId = assetsId.get(position);
                 MainActivity.adapter.updateGridAdapter();
@@ -180,19 +179,14 @@ public class GridAdapter extends BaseAdapter {
     public static ArrayList<String[]> sortAssets(ArrayList<String[]> assets, boolean isAscending) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
-        Collections.sort(assets, new Comparator<String[]>() {
-            @Override
-            public int compare(String[] o1, String[] o2) {
-                try {
-                    System.out.println("time for first asset: " + o1[3]);
-                    System.out.println("time for second asset: " + o2[3]);
-                    Date updatedAt1 = dateFormat.parse(o1[3]);
-                    Date updatedAt2 = dateFormat.parse(o2[3]);
-                    return isAscending ? updatedAt1.compareTo(updatedAt2) : updatedAt2.compareTo(updatedAt1);
-                } catch (ParseException e) {
-                    LogHandler.saveLog("Error while sorting assets: " + e.getMessage(), true);
-                    return 0;
-                }
+        Collections.sort(assets, (o1, o2) -> {
+            try {
+                Date updatedAt1 = dateFormat.parse(o1[3]);
+                Date updatedAt2 = dateFormat.parse(o2[3]);
+                return isAscending ? updatedAt1.compareTo(updatedAt2) : updatedAt2.compareTo(updatedAt1);
+            } catch (ParseException e) {
+                LogHandler.saveLog("Error while sorting assets: " + e.getMessage(), true);
+                return 0;
             }
         });
         return assets;
@@ -232,6 +226,5 @@ public class GridAdapter extends BaseAdapter {
         allAssets.add(sortAssets(notes, false)); // Sort by newest to oldest
         return allAssets;
     }
-
 
 }
