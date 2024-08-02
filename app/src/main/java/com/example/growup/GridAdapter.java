@@ -1,13 +1,11 @@
 package com.example.growup;
 
 
+import static com.example.growup.DBHelper.getAssetLastUpdateTime;
+
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.os.Build;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -16,18 +14,22 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.widget.PopupMenu;
-
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Locale;
 
 public class GridAdapter extends BaseAdapter {
 
-    private Context mContext;
-    private static final int tempAssetId = -2;
-    private ArrayList<String> assetsName;
-    private ArrayList<Integer> assetsIcon;
-    private ArrayList<Integer> assetsId;
+    public static Context mContext;
+    public static final int tempAssetId = -2;
+    public static ArrayList<String> assetsName;
+    public static ArrayList<Integer> assetsIcon;
+    public static ArrayList<Integer> assetsId;
 
 
     public static void initializeGridAdapter() {
@@ -44,6 +46,7 @@ public class GridAdapter extends BaseAdapter {
     }
 
     public void updateGridAdapter() {
+        notifyDataSetChanged();
         readChildItemsOf(MainActivity.currentId);
         MainActivity.noteCreator.createNoteButton();
         notifyDataSetChanged();
@@ -54,12 +57,13 @@ public class GridAdapter extends BaseAdapter {
 
     public void readChildItemsOf(int pid) {
         ArrayList<String[]> assets = MainActivity.dbHelper.getAssetIdByPid(pid);
-        assetsId = new ArrayList<Integer>();
-        assetsName = new ArrayList<String>();
-        assetsIcon = new ArrayList<Integer>();
-        if (!assets.isEmpty()) {
-            //sort first folders then notes (todo)
-            for (String[] asset : assets) {
+        ArrayList<ArrayList<String[]>> sortedAssets = categorizeAssets(assets);
+        assetsId = new ArrayList<>();
+        assetsName = new ArrayList<>();
+        assetsIcon = new ArrayList<>();
+
+        for (ArrayList<String[]> assetTypes : sortedAssets) {
+            for (String[] asset : assetTypes) {
                 int assetId = Integer.parseInt(asset[0]);
                 String keyword = asset[1];
                 assetsId.add(assetId);
@@ -86,7 +90,7 @@ public class GridAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return assetsName.size();
+        return assetsId.size();
     }
 
     @Override
@@ -96,7 +100,7 @@ public class GridAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return assetsId.get(position);
+        return position;
     }
 
     @Override
@@ -106,22 +110,26 @@ public class GridAdapter extends BaseAdapter {
 
         if (convertView == null) {
             gridView = inflater.inflate(R.layout.grid_item_layout, null);
-            TextView textViewName = gridView.findViewById(R.id.textViewName);
-            ImageView imageViewIcon = gridView.findViewById(R.id.imageViewIcon);
-            textViewName.setText(assetsName.get(position));
-            imageViewIcon.setImageResource(assetsIcon.get(position));
-
-            gridView.setOnClickListener(v -> itemsActions(position));
-
-            gridView.setOnLongClickListener(v -> {
-                displayPopUpMenu(position,gridView);
-                return true;
-            });
         } else {
             gridView = convertView;
         }
+
+        TextView textViewName = gridView.findViewById(R.id.textViewName);
+        ImageView imageViewIcon = gridView.findViewById(R.id.imageViewIcon);
+
+        textViewName.setText(assetsName.get(position));
+        imageViewIcon.setImageResource(assetsIcon.get(position));
+
+        gridView.setOnClickListener(v -> itemsActions(position));
+
+        gridView.setOnLongClickListener(v -> {
+            GridItemsPopupMenu.displayPopUpMenu(position, gridView);
+            return true;
+        });
+
         return gridView;
     }
+
 
     private void itemsActions(int position) {
         if (assetsIcon.get(position) == R.drawable.ic_add_folder) {
@@ -150,142 +158,80 @@ public class GridAdapter extends BaseAdapter {
         final EditText input = new EditText(mContext);
         builder.setView(input);
 
-        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            String newFolderName = input.getText().toString();
+            if (newFolderName.isEmpty()){
+                MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "Folder name can't be empty", Toast.LENGTH_SHORT).show());
+                return;
+            }
+            boolean isCreated = MainActivity.dbHelper.insertIntoAssetsTable(newFolderName,
+                    TypeHandler.getTypeIdByType("folder"), MainActivity.currentId);
+            if (!isCreated){
+                MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "cant create Folder", Toast.LENGTH_SHORT).show());
+            }
+            MainActivity.adapter.updateGridAdapter();
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+    public static ArrayList<String[]> sortAssets(ArrayList<String[]> assets, boolean isAscending) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
+        Collections.sort(assets, new Comparator<String[]>() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String newFolderName = input.getText().toString();
-                boolean isCreated = MainActivity.dbHelper.insertIntoAssetsTable(newFolderName,
-                        TypeHandler.getTypeIdByType("folder"), MainActivity.currentId);
-                if (!isCreated){
-                    MainActivity.activity.runOnUiThread(() -> {
-                        Toast.makeText(mContext, "cant create Folder", Toast.LENGTH_SHORT).show();
-                    });
+            public int compare(String[] o1, String[] o2) {
+                try {
+                    System.out.println("time for first asset: " + o1[3]);
+                    System.out.println("time for second asset: " + o2[3]);
+                    Date updatedAt1 = dateFormat.parse(o1[3]);
+                    Date updatedAt2 = dateFormat.parse(o2[3]);
+                    return isAscending ? updatedAt1.compareTo(updatedAt2) : updatedAt2.compareTo(updatedAt1);
+                } catch (ParseException e) {
+                    LogHandler.saveLog("Error while sorting assets: " + e.getMessage(), true);
+                    return 0;
                 }
-                MainActivity.adapter.updateGridAdapter();
             }
         });
+        return assets;
+    }
 
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+    public static ArrayList<ArrayList<String[]>> categorizeAssets(ArrayList<String[]> assets) {
+        ArrayList<String[]> pinFolders = new ArrayList<>();
+        ArrayList<String[]> pinNotes = new ArrayList<>();
+        ArrayList<String[]> folders = new ArrayList<>();
+        ArrayList<String[]> notes = new ArrayList<>();
+
+        for (String[] asset : assets) {
+            int typeId = Integer.parseInt(asset[2]);
+
+            switch (TypeHandler.getTypeNameByTypeId(typeId)) {
+                case "folder":
+                    folders.add(asset);
+                    break;
+                case "note":
+                    notes.add(asset);
+                    break;
+                case "pin_folder":
+                    pinFolders.add(asset);
+                    break;
+                case "pin_note":
+                    pinNotes.add(asset);
+                    break;
+                default:
+                    break;
             }
-        });
-
-        builder.show();
-    }
-
-    public void displayPopUpMenu(int position,View gridView) {
-        String[] menuItems = new String[]{};
-        int assetId = assetsId.get(position);
-        if (assetId == tempAssetId) {
-            return ;
-        }
-        switch (TypeHandler.getTypeNameByAssetId(assetId)){
-            case "folder":
-                menuItems = new String[]{"Rename", "Move", "Delete", "Pin", "Share"};
-                break;
-            case "note":
-                menuItems = new String[]{"Move", "Delete", "Pin", "Set Reminder", "Share"};
-                break;
-            case "pin_folder":
-                menuItems = new String[]{"Rename", "Move", "Delete", "UnPin", "Share"};
-                break;
-            case "pin_note":
-                menuItems = new String[]{"Move", "Delete", "UnPin", "Set Reminder", "Share"};
-                break;
         }
 
-        PopupMenu popupMenu = new PopupMenu(MainActivity.activity, gridView, Gravity.CENTER);
-        for (String menuItem : menuItems) {
-            popupMenu.getMenu().add(menuItem);
-        }
-
-        popupMenu.setOnMenuItemClickListener(item -> {
-            String popupMenuItemTitle = item.getTitle().toString();
-            handleMenuItem(position,popupMenuItemTitle);
-            return true;
-        });
-        popupMenu.show();
+        ArrayList<ArrayList<String[]>> allAssets = new ArrayList<>();
+        allAssets.add(sortAssets(pinFolders, false)); // Sort by newest to oldest
+        allAssets.add(sortAssets(pinNotes, false)); // Sort by newest to oldest
+        allAssets.add(sortAssets(folders, false)); // Sort by newest to oldest
+        allAssets.add(sortAssets(notes, false)); // Sort by newest to oldest
+        return allAssets;
     }
 
-    public void handleMenuItem(int position, String itemTitle) {
-        int assetId = assetsId.get(position);
-        switch (itemTitle) {
-            case "Rename":
-                RenameItem(assetId, position);
-                break;
-            case "Move":
-                System.out.println("you clicked on move");
-                //should implement moving logic
-                break;
-            case "Pin":
-            case "UnPin":
-                changePinItem(position);
-                break;
-            case "Set Reminder":
-                System.out.println("you clicked on set reminder");
-                //should implement setting reminder logic
-                break;
-            case "Delete":
-                deleteItem(assetId);
-                break;
-            case "Share":
-//                shareItem(MainActivity.gridView.getSelectedItemPosition());
-                break;
-        }
-    }
 
-    public void deleteItem(int assetId) {
-        MainActivity.dbHelper.deleteAsset(assetId);
-        MainActivity.adapter.updateGridAdapter();
-    }
-
-    public void RenameItem(int assetId, int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        builder.setTitle("Rename folder Folder");
-        final EditText input = new EditText(mContext);
-        input.setText(assetsName.get(position));
-        builder.setView(input);
-
-        builder.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String newFolderName = input.getText().toString();
-                MainActivity.dbHelper.updateAssetName(String.valueOf(assetId), newFolderName);
-                MainActivity.adapter.updateGridAdapter();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
-
-    public void changePinItem(int position) {
-        int assetId = assetsId.get(position);
-        String assetType = TypeHandler.getTypeNameByAssetId(assetId);
-        String newType = "";
-        switch (assetType) {
-            case "folder":
-                newType = "pin_folder";
-                break;
-            case "note":
-                newType = "pin_note";
-                break;
-            case "pin_folder":
-                newType = "folder";
-                break;
-            case "pin_note":
-                newType = "note";
-                break;
-        }
-        TypeHandler.updateAssetType(assetId, newType);
-        MainActivity.adapter.updateGridAdapter();
-    }
 }
