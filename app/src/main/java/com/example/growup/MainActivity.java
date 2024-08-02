@@ -91,15 +91,6 @@ public class MainActivity extends AppCompatActivity {
             });
 
         if (isLinkedToGoogleDrive){new Thread(BackUpDataBase::backUpDataBaseToDrive).start();}
-
-
-        LogHandler.saveLog("time of setting Alarm",false);
-        AlarmHandler alarmHandler = new AlarmHandler(this);
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, 15);
-        alarmHandler.setAlarm(calendar.getTimeInMillis(), 0, "Reminder", "This is your reminder");
-
-
     }
 
 

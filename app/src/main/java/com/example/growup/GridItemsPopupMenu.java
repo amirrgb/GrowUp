@@ -68,8 +68,7 @@ public class GridItemsPopupMenu {
                 changePinItem(position);
                 break;
             case "Set Reminder":
-                System.out.println("you clicked on set reminder");
-                //should implement setting reminder logic
+                setReminder(position);
                 break;
             case "Delete":
                 deleteItem(assetId);
@@ -141,4 +140,8 @@ public class GridItemsPopupMenu {
         MainActivity.adapter.updateGridAdapter();
     }
 
+    public static void setReminder(int position) {
+        int assetId = assetsId.get(position);
+        AlarmHandler.showChooseTime(MainActivity.activity, assetId);
+    }
 }
