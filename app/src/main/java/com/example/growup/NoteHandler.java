@@ -32,7 +32,7 @@ public class NoteHandler {
                             });
                         } else {
                             if (MainActivity.dbHelper.insertIntoAssetsTable(noteName,
-                                    MainActivity.dbHelper.getTypeId("note"), MainActivity.currentId)) {
+                                    TypeHandler.getTypeIdByType("note"), MainActivity.currentId)) {
                                 String lastId = MainActivity.dbHelper.getLastId();
                                 MainActivity.dbHelper.insertIntoNotesTable(lastId, noteName, "");
                                 MainActivity.activity.runOnUiThread(() -> {

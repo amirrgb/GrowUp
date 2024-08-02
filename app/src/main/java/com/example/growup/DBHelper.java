@@ -21,8 +21,7 @@ public class DBHelper extends SQLiteOpenHelper {
         dbReadable = getReadableDatabase(ENCRYPTION_KEY);
         dbWritable = getReadableDatabase(ENCRYPTION_KEY);
         onCreate(getWritableDatabase(ENCRYPTION_KEY));
-        insertIntoTypesTable("2","folder","ic_folder");
-        insertIntoTypesTable("3","note","ic_note");
+        TypeHandler.TypeInitializer();
     }
 
     @Override
@@ -39,20 +38,23 @@ public class DBHelper extends SQLiteOpenHelper {
         String TYPES = "CREATE TABLE IF NOT EXISTS TYPES(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"+
                 "type TEXT," +
-                "icon_name TEXT)";
+                "icon_id INTEGER)";
         sqLiteDatabase.execSQL(TYPES);
+
         String Notes = "CREATE TABLE IF NOT EXISTS NOTES(" +
                 "id INTEGER PRIMARY KEY," +
                 "title TEXT,"+
                 "content TEXT," +
                 "FOREIGN KEY (id) REFERENCES ASSETS(id) ON DELETE CASCADE)";
         sqLiteDatabase.execSQL(Notes);
+
         String Accounts = "CREATE TABLE IF NOT EXISTS ACCOUNTS(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "Email TEXT UNIQUE," +
                 "RefreshToken TEXT," +
                 "folderId TEXT)";
         sqLiteDatabase.execSQL(Accounts);
+
         String Reminders = "CREATE TABLE IF NOT EXISTS REMINDERS(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "assetId INTEGER," +
@@ -91,11 +93,11 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     //should change to protected from sql injection
-    public boolean insertIntoAssetsTable(String keyword, String typeId, int pid){
+    public boolean insertIntoAssetsTable(String keyword, int typeId, int pid){
         try {
             dbWritable.beginTransaction();
             String sqlQuery = "INSERT INTO ASSETS (KEYWORD, typeId,pid) VALUES (?,?,?)";
-            dbWritable.execSQL(sqlQuery, new Object[]{keyword, typeId,pid});
+            dbWritable.execSQL(sqlQuery, new String[]{keyword, String.valueOf(typeId), String.valueOf(pid)});
             dbWritable.setTransactionSuccessful();
         } catch(SQLiteConstraintException ee) {
             MainActivity.activity.runOnUiThread(new Runnable() {
@@ -128,25 +130,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    public void insertIntoTypesTable(String id,String type,String icon_name){
-        try {
-            dbWritable.beginTransaction();
-            String sqlQuery = "INSERT INTO TYPES (id,type,icon_name) VALUES (?,?,?)";
-            dbWritable.execSQL(sqlQuery, new String[]{id,type,icon_name});
-            dbWritable.setTransactionSuccessful();
-        } catch (Exception e) {
-            try {
-                String sqlQuery2 = "UPDATE TYPES SET icon_name = ? WHERE type = ?";
-                dbWritable.execSQL(sqlQuery2, new String[]{icon_name, type});
-                dbWritable.setTransactionSuccessful();
-            }catch (Exception e1){
-                LogHandler.saveLog("Failed to insert into TYPES table : " + e1.getLocalizedMessage(),true);
-            }
-        } finally {
-            dbWritable.endTransaction();
-        }
-    }
-
     public void insertIntoNotesTable(String id,String title,String content){
         System.out.println("data for insert is : "+ id + " " + title + " "
          + content);
@@ -162,10 +145,10 @@ public class DBHelper extends SQLiteOpenHelper {
         } finally {
             dbWritable.endTransaction();
         }
-        updateAssetsTable(id,title);
+        updateAssetName(id,title);
     }
 
-    private void updateAssetsTable(String id, String title) {
+    public void updateAssetName(String id, String title) {
         try {
             dbWritable.beginTransaction();
             String sqlQuery = "UPDATE ASSETS SET KEYWORD = ? WHERE id = ?";
@@ -178,23 +161,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public String getTypeId(String type){
-        Cursor cursor = null;
-        String typeId = "";
-        try {
-            String sqlQuery = "SELECT id FROM TYPES WHERE type=?";
-            cursor = dbReadable.rawQuery(sqlQuery, new String[]{type});
-            if (cursor != null && cursor.moveToFirst()) {
-                typeId = cursor.getString(0);
-                cursor.close();
-            }
-        } catch (Exception e) {
-            LogHandler.saveLog("Failed to get typeId from TYPES table : " + e.getLocalizedMessage(),true);
-        }finally {
-            return typeId;
-        }
-    }
-
     public String[] getAsset(String id){
         String sqlQuery = "SELECT * FROM ASSETS WHERE id = ?";
         Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{id});
@@ -202,10 +168,10 @@ public class DBHelper extends SQLiteOpenHelper {
         if(cursor != null && cursor.moveToFirst()){
             result = new String[]{cursor.getString(0),cursor.getString(1)
                     ,cursor.getString(2),cursor.getString(3)};
+            cursor.close();
         }else{
             result = new String[]{"","","",""};
         }
-        cursor.close();
         return result;
     }
 
@@ -276,17 +242,6 @@ public class DBHelper extends SQLiteOpenHelper {
         cursor.close();
         dbReadable.endTransaction();
         return lastId;
-    }
-
-    public static String getTypeIdOfAsset(int currentId){
-        String sqlQuery = "SELECT typeId FROM ASSETS WHERE id=?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(currentId)});
-        String typeId = "";
-        if (cursor != null && cursor.moveToFirst()) {
-            typeId = cursor.getString(0);
-        }
-        cursor.close();
-        return typeId;
     }
 
     public static GoogleCloud.signInResult getAccount(){
