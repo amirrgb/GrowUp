@@ -48,15 +48,15 @@ public class TypeHandler {
     }
 
     public static int getTypeIdByAssetId(int assetId){
-        String typeId = "";
+        int typeId = -1;
         try{
             String sqlQuery = "SELECT typeId FROM ASSETS WHERE id=?";
             Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(assetId)});
             if (cursor != null && cursor.moveToFirst()) {
-                typeId = cursor.getString(0);
+                typeId = cursor.getInt(0);
                 cursor.close();
             }
-            return Integer.parseInt(typeId);
+            return typeId;
         }catch (Exception e){
             LogHandler.saveLog("Failed to get typeId by assetId : (typeId is "+typeId +") error : "+ e.getLocalizedMessage(),true);
             return 0;

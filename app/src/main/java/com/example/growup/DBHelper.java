@@ -28,6 +28,14 @@ public class DBHelper extends SQLiteOpenHelper {
         TypeHandler.TypeInitializer();
     }
 
+    public DBHelper(Context context,String name) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        SQLiteDatabase.loadLibs(context);
+        dbReadable = getReadableDatabase(ENCRYPTION_KEY);
+        dbWritable = getReadableDatabase(ENCRYPTION_KEY);
+        onCreate(getWritableDatabase(ENCRYPTION_KEY));
+    }
+
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         // Create ASSETS table
@@ -73,11 +81,13 @@ public class DBHelper extends SQLiteOpenHelper {
                 "assetId INTEGER," +
                 "title TEXT," +
                 "message TEXT," +
-                "date TEXT," +
-                "time TEXT," +
+                "date Date," +
+                "alarmType TEXT," +
+                "milisToNextAlarm TEXT," +
+                "priority TEXT," +
+                "requestCode INTEGER," +
                 "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
                 "updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
-                "priority TEXT," +
                 "FOREIGN KEY (assetId) REFERENCES ASSETS(id) ON DELETE CASCADE)";
         sqLiteDatabase.execSQL(Reminders);
 
@@ -332,5 +342,14 @@ public class DBHelper extends SQLiteOpenHelper {
             cursor.close();
         }
         return lastUpdateTime;
+    }
+
+
+    public void moveAsset(int assetId, int newParentId){
+        dbWritable.beginTransaction();
+        String sqlQuery = "UPDATE ASSETS SET pid=? WHERE id=?";
+        dbWritable.execSQL(sqlQuery, new Object[]{newParentId, assetId});
+        dbWritable.setTransactionSuccessful();
+        dbWritable.endTransaction();
     }
 }

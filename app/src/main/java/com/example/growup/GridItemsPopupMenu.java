@@ -4,6 +4,7 @@ import static com.example.growup.GridAdapter.assetsId;
 import static com.example.growup.GridAdapter.assetsName;
 import static com.example.growup.GridAdapter.assetsIcon;
 import static com.example.growup.GridAdapter.mContext;
+import static com.example.growup.GridAdapter.movingStatus;
 import static com.example.growup.GridAdapter.tempAssetId;
 
 import android.app.AlertDialog;
@@ -20,6 +21,11 @@ import androidx.appcompat.widget.PopupMenu;
 
 public class GridItemsPopupMenu {
     public static void displayPopUpMenu(int position, View gridView) {
+        if (movingStatus){
+            MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "paste selected asset first", Toast.LENGTH_SHORT).show());
+            return;
+        }
+
         String[] menuItems = new String[]{};
         int assetId = assetsId.get(position);
         if (assetId == tempAssetId) {
@@ -60,8 +66,7 @@ public class GridItemsPopupMenu {
                 RenameItem(assetId, position);
                 break;
             case "Move":
-                System.out.println("you clicked on move");
-                //should implement moving logic
+                moveItem(position);
                 break;
             case "Pin":
             case "UnPin":
@@ -74,7 +79,7 @@ public class GridItemsPopupMenu {
                 deleteItem(assetId);
                 break;
             case "Share":
-//                shareItem(MainActivity.gridView.getSelectedItemPosition());
+                MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "I don't think somebody installed this app", Toast.LENGTH_SHORT).show());
                 break;
         }
     }
@@ -141,7 +146,15 @@ public class GridItemsPopupMenu {
     }
 
     public static void setReminder(int position) {
-        int assetId = assetsId.get(position);
-        AlarmHandler.showChooseTime(MainActivity.activity, assetId);
+        AlarmHandler alarmHandler = new AlarmHandler(MainActivity.activity);
+        alarmHandler.openAlarm(position);
+//        int assetId = assetsId.get(position);
+//        AlarmHandler.showChooseTime(MainActivity.activity, assetId);
+    }
+
+    public static void moveItem(int position){
+        movingStatus = true;
+        GridAdapter.movingAssetId = assetsId.get(position);
+        MainActivity.adapter.updateGridAdapter();
     }
 }

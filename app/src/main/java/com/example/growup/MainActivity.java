@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     public static NoteHandler noteCreator;
     public static ActivityResultLauncher<Intent> signInToBackUpLauncher;
     public static boolean isLinkedToGoogleDrive;
+    public static boolean onSetAlarmScreen = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,6 +168,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static void backButtonProcess(){
+        if (onSetAlarmScreen) {
+            onSetAlarmScreen = false;
+            GridAdapter.initializeGridAdapter();
+            return;
+        }
         if (dbHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
