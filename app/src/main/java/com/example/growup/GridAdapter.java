@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,6 +26,8 @@ public class GridAdapter extends BaseAdapter {
     public static ArrayList<String> assetsName;
     public static ArrayList<Integer> assetsIcon;
     public static ArrayList<Integer> assetsId;
+    public static boolean movingStatus = false;
+    public static int movingAssetId = -1;
 
 
     public static void initializeGridAdapter() {
@@ -73,6 +76,21 @@ public class GridAdapter extends BaseAdapter {
 
     public void updateHeader(){
         TextView header = MainActivity.activity.findViewById(R.id.headerTextView);
+        Button pasteButton = MainActivity.activity.findViewById(R.id.pasteHereButton);
+        if (GridAdapter.movingStatus){
+            pasteButton.setVisibility(View.VISIBLE);
+            pasteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MainActivity.dbHelper.moveAsset(GridAdapter.movingAssetId, MainActivity.currentId);
+                    GridAdapter.movingStatus = false;
+                    GridAdapter.movingAssetId = -1;
+                    MainActivity.adapter.updateGridAdapter();
+                }
+            });
+        }else{
+            pasteButton.setVisibility(View.GONE);
+        }
         if (MainActivity.currentId == 0){
             header.setText("Home");
             MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.app_setting);
@@ -138,6 +156,10 @@ public class GridAdapter extends BaseAdapter {
         switch (TypeHandler.getTypeNameByAssetId(assetId)) {
             case "pin_note":
             case "note":
+                if (movingStatus){
+                    MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "paste selected asset first", Toast.LENGTH_SHORT).show());
+                    return;
+                }
                 MainActivity.currentId = assetsId.get(position);
                 MainActivity.noteCreator.openNote();
                 break;

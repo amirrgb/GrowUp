@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TimePicker
+                android:id="@+id/timePicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:scaleX="0.7"
+                android:scaleY="0.7" />
+
+            <RadioGroup
+                android:id="@+id/alarmRadioGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <RadioButton
+                    android:id="@+id/todayRadioButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today"
+                    android:checked="true" />
+
+                <RadioButton
+                    android:id="@+id/repeatDailyRadioButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Repeat Daily"
+                    android:checked="false" />
+
+                <RadioButton
+                    android:id="@+id/specificDateRadioButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Specific Date"
+                    android:checked="false" />
+
+                <RadioButton
+                    android:id="@+id/periodicRepeatRadioButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Periodic Repeat"
+                    android:checked="false" />
+
+                <RadioButton
+                    android:id="@+id/hourlyRepeatRadioButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hourly Repeat"
+                    android:checked="false" />
+
+            </RadioGroup>
+
+            <LinearLayout
+                android:id="@+id/periodicRepeatLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                android:layout_gravity="center"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/labelForPeriodicRepeatText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Repeat Every " />
+
+                <EditText
+                    android:id="@+id/periodicRepeatText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center" />
+
+                <TextView
+                    android:id="@+id/labelForPeriodicRepeatText2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" Day" />
+
+                <EditText
+                    android:id="@+id/periodicRepeatText2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="0"
+                    />
+
+
+                <TextView
+                    android:id="@+id/labelForPeriodicRepeatText3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" Minutes" />
+
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/labelForStartDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="    Start From : "
+                android:visibility="gone" />
+
+            <DatePicker
+                android:id="@+id/datePicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/estimatedTimeToDoLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="visible"
+                android:layout_gravity="center"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/labelForEstimatedTimeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Estimated Time For Task : " />
+
+                <EditText
+                    android:id="@+id/estimatedHourToDoText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="0"/>
+
+                <TextView
+                    android:id="@+id/labelForEstimatedTimeText2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" Hours &amp; " />
+
+                <EditText
+                    android:id="@+id/estimatedMinuteToDoText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="0"
+                    />
+
+
+                <TextView
+                    android:id="@+id/labelForEstimatedTimeText3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" Minute" />
+
+            </LinearLayout>
+            
+            <Button
+                android:id="@+id/setAlarmButton"
+                android:text="Set Alarm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="20dp"
+                android:checked="false" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
