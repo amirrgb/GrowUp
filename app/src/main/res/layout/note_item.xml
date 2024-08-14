@@ -17,21 +17,24 @@
         android:padding="16dp">
 
         <EditText
+            android:layout_marginTop="20dp"
+            android:paddingTop="10dp"
             android:id="@+id/textViewTitle"
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/black"
+            android:textColor="@color/white"
             android:layout_marginBottom="8dp"/>
 
         <EditText
             android:id="@+id/textViewContent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:textSize="16sp"
-            android:textLocale="top"
-            android:textColor="@color/black"
+            android:gravity="top"
+            android:textAlignment="gravity"
+            android:textColor="@color/white"
             android:layout_marginBottom="8dp"/>
     </LinearLayout>
 

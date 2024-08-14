@@ -21,6 +21,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:scaleX="0.7"
+                android:textColor="@color/white"
                 android:scaleY="0.7" />
 
             <RadioGroup
@@ -32,14 +33,16 @@
                     android:id="@+id/todayRadioButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Today"
-                    android:checked="true" />
+                    android:checked="true"
+                    android:textColor="@color/white"
+                    android:text="Today" />
 
                 <RadioButton
                     android:id="@+id/repeatDailyRadioButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Repeat Daily"
+                    android:textColor="@color/white"
                     android:checked="false" />
 
                 <RadioButton
@@ -47,6 +50,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Specific Date"
+                    android:textColor="@color/white"
                     android:checked="false" />
 
                 <RadioButton
@@ -54,6 +58,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Periodic Repeat"
+                    android:textColor="@color/white"
                     android:checked="false" />
 
                 <RadioButton
@@ -61,6 +66,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Hourly Repeat"
+                    android:textColor="@color/white"
                     android:checked="false" />
 
             </RadioGroup>
@@ -78,17 +84,20 @@
                     android:id="@+id/labelForPeriodicRepeatText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/white"
                     android:text="Repeat Every " />
 
                 <EditText
                     android:id="@+id/periodicRepeatText"
                     android:layout_width="wrap_content"
+                    android:textColor="@color/white"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center" />
 
                 <TextView
                     android:id="@+id/labelForPeriodicRepeatText2"
                     android:layout_width="wrap_content"
+                    android:textColor="@color/white"
                     android:layout_height="wrap_content"
                     android:text=" Day" />
 
@@ -96,6 +105,7 @@
                     android:id="@+id/periodicRepeatText2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/white"
                     android:layout_gravity="center"
                     android:text="0"
                     />
@@ -105,6 +115,7 @@
                     android:id="@+id/labelForPeriodicRepeatText3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/white"
                     android:text=" Minutes" />
 
 
@@ -115,6 +126,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="    Start From : "
+                android:textColor="@color/white"
                 android:visibility="gone" />
 
             <DatePicker
@@ -122,6 +134,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:textColor="@color/white"
                 android:visibility="gone" />
 
             <LinearLayout
@@ -137,6 +150,7 @@
                     android:id="@+id/labelForEstimatedTimeText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/white"
                     android:text="Estimated Time For Task : " />
 
                 <EditText
@@ -144,12 +158,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:textColor="@color/white"
                     android:text="0"/>
 
                 <TextView
                     android:id="@+id/labelForEstimatedTimeText2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/white"
                     android:text=" Hours &amp; " />
 
                 <EditText
@@ -157,6 +173,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:textColor="@color/white"
                     android:text="0"
                     />
 
@@ -165,6 +182,7 @@
                     android:id="@+id/labelForEstimatedTimeText3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/white"
                     android:text=" Minute" />
 
             </LinearLayout>
@@ -175,6 +193,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:textColor="@color/white"
                 android:layout_margin="20dp"
                 android:checked="false" />
         </LinearLayout>
