@@ -70,14 +70,15 @@ public class BackUpDataBase {
             if (refreshToken == null || refreshToken.isEmpty()) {
                 return false;
             }
-            String accessToken = MainActivity.googleCloud.updateAccessToken(refreshToken);
-            if (accessToken == null || accessToken.isEmpty()) {
-                return false;
-            }
-            if (GoogleCloud.isAccessTokenValid(accessToken)) {
-                System.out.println("your access token is valid");
-                return true;
-            }
+//            String accessToken = MainActivity.googleCloud.updateAccessToken(refreshToken);
+//            if (accessToken == null || accessToken.isEmpty()) {
+//                return false;
+//            }
+//            if (GoogleCloud.isAccessTokenValid(accessToken)) {
+//                System.out.println("your access token is valid");
+//                return true;
+//            }
+            return true;
         }catch (Exception e){
             LogHandler.saveLog("Failed to check linked to Google Drive: " + e.getLocalizedMessage(), true);
         }

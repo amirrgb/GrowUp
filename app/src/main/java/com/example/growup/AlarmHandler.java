@@ -26,9 +26,12 @@ import androidx.annotation.RequiresApi;
 
 import net.sqlcipher.Cursor;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class AlarmHandler {
     public static Context context;
@@ -246,5 +249,33 @@ public class AlarmHandler {
         }
     }
 
+    public static void rescheduleAlarms(Context context) {
+        DBHelper dbHelper = DBHelper.getInstance(context);
+        List<String[]> alarms = dbHelper.getAllAlarms();
+        System.out.println("size of alarms: " + alarms.size());
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
+
+        for (String[] alarm : alarms) {
+            String title = alarm[1];
+            String message = alarm[2];
+            String date = alarm[3];
+            int requestCode = Integer.parseInt(alarm[7]);
+
+            try {
+                Date alarmDate = dateFormat.parse(date);
+
+                // Check if the alarm time is in the future
+                if (alarmDate != null && alarmDate.getTime() > System.currentTimeMillis()) {
+                    AlarmReceiver.setAlarm(context, alarmDate.getTime(), requestCode, title, message);
+                } else {
+                    // Optionally, handle past alarms (e.g., log them, remove them, etc.)
+                    System.out.println("Alarm date is in the past: " + alarmDate);
+                }
+
+            } catch (Exception e) {
+                LogHandler.saveLog("Failed to parse date: " + e.getLocalizedMessage(), true);
+            }
+        }
+    }
 }

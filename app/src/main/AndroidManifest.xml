@@ -31,15 +31,6 @@
         android:theme="@style/Theme.GrowUp"
         >
 
-<!--        <provider-->
-<!--            android:name="androidx.core.content.FileProvider"-->
-<!--            android:authorities="${applicationId}.provider"-->
-<!--            android:exported="false"-->
-<!--            android:grantUriPermissions="true">-->
-<!--            <meta-data-->
-<!--                android:name="android.support.FILE_PROVIDER_PATHS"/>-->
-<!--        </provider>-->
-
         <activity android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.GrowUp"
@@ -51,9 +42,20 @@
             </intent-filter>
         </activity>
 
+        <receiver android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
         <receiver android:name=".AlarmReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="com.example.growup.ACTION_STOP_ALARM"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.example.growup.ACTION_STOP_AND_CANCEL_ALARMS"/>
             </intent-filter>
         </receiver>
    </application>
