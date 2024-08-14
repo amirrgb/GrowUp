@@ -31,6 +31,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         System.out.println("alarm received : " + intent.getStringExtra("title"));
         String action = intent.getAction();
 
+        boolean hasNextAlarm = false;
         int requestCode = intent.getIntExtra("requestCode", 0);
         System.out.println("requestCode : " + requestCode);
         if (requestCode == 0) {
@@ -68,6 +69,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         long millisToNextAlarm = Long.parseLong(alarm[5]);
 
         if (alarmType.equals("repeatDaily") || alarmType.equals("periodicRepeat") || alarmType.equals("hourlyRepeat")) {
+            hasNextAlarm = true;
             Date nextAlarmDate = new Date(System.currentTimeMillis() + millisToNextAlarm);
             setAlarm(context, nextAlarmDate.getTime(), requestCode, title, message);
             updateAlarms(context, requestCode, title, message, nextAlarmDate);
@@ -82,15 +84,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         stopIntent.setAction(ACTION_STOP_ALARM);
         stopIntent.putExtra("requestCode", requestCode);
         PendingIntent stopPendingIntent = PendingIntent.getBroadcast(
-                context, requestCode, stopIntent, PendingIntent.FLAG_IMMUTABLE
-        );
-
-        Intent cancelNextAlarmsIntent = new Intent(context, AlarmReceiver.class);
-        cancelNextAlarmsIntent.setAction(ACTION_STOP_AND_CANCEL_ALARMS);
-        cancelNextAlarmsIntent.putExtra("requestCode", requestCode);
-        PendingIntent cancelNextAlarmsPendingIntent = PendingIntent.getBroadcast(
-                context, requestCode, cancelNextAlarmsIntent, PendingIntent.FLAG_IMMUTABLE
-        );
+                context, requestCode, stopIntent, PendingIntent.FLAG_MUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.note)
@@ -98,8 +92,17 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(false)
-                .addAction(R.drawable.ic_lets_go, "Stop", stopPendingIntent)
-                .addAction(R.drawable.ic_lets_go, "Stop & Cancel", cancelNextAlarmsPendingIntent);
+                .addAction(R.drawable.ic_lets_go, "Stop", stopPendingIntent);
+
+        if (hasNextAlarm) {
+            Intent cancelNextAlarmsIntent = new Intent(context, AlarmReceiver.class);
+            cancelNextAlarmsIntent.setAction(ACTION_STOP_AND_CANCEL_ALARMS);
+            cancelNextAlarmsIntent.putExtra("requestCode", requestCode);
+            PendingIntent cancelNextAlarmsPendingIntent = PendingIntent.getBroadcast(
+                    context, requestCode, cancelNextAlarmsIntent, PendingIntent.FLAG_MUTABLE);
+            builder.addAction(R.drawable.ic_lets_go, "Stop & Cancel", cancelNextAlarmsPendingIntent);
+        }
+
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, builder.build());

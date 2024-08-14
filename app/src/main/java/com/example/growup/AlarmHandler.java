@@ -265,11 +265,14 @@ public class AlarmHandler {
             try {
                 Date alarmDate = dateFormat.parse(date);
 
-                // Check if the alarm time is in the future
                 if (alarmDate != null && alarmDate.getTime() > System.currentTimeMillis()) {
-                    AlarmReceiver.setAlarm(context, alarmDate.getTime(), requestCode, title, message);
+                    if (!hasAlarmSet(context, requestCode)){
+                        AlarmReceiver.setAlarm(context, alarmDate.getTime(), requestCode, title, message);
+                    }else{
+                        System.out.println("Alarm already set for request code: " + requestCode + " and date : " + alarmDate);
+                    }
                 } else {
-                    // Optionally, handle past alarms (e.g., log them, remove them, etc.)
+                    AlarmReceiver.deleteAlarmFromDatabase(context, requestCode);
                     System.out.println("Alarm date is in the past: " + alarmDate);
                 }
 
@@ -277,5 +280,12 @@ public class AlarmHandler {
                 LogHandler.saveLog("Failed to parse date: " + e.getLocalizedMessage(), true);
             }
         }
+    }
+
+    public static boolean hasAlarmSet(Context context, int requestCode) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_MUTABLE);
+        return pendingIntent!= null;
     }
 }
