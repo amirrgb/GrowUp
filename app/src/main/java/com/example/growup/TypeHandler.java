@@ -8,6 +8,7 @@ import android.database.Cursor;
 public class TypeHandler {
 
     public static void TypeInitializer(){
+        DBHelper.deleteRedundantTypes(4);
         TypeHandler.insertIntoTypesTable("folder",R.drawable.ic_folder);
         TypeHandler.insertIntoTypesTable("note",R.drawable.ic_note);
         TypeHandler.insertIntoTypesTable("pin_folder",R.drawable.ic_pin_folder);
@@ -15,21 +16,34 @@ public class TypeHandler {
     }
 
     public static void insertIntoTypesTable(String type, int icon_id){
-        try {
-            dbWritable.beginTransaction();
-            String sqlQuery = "INSERT INTO TYPES (type,icon_id) VALUES (?,?)";
-            dbWritable.execSQL(sqlQuery, new String[]{type, String.valueOf(icon_id)});
-            dbWritable.setTransactionSuccessful();
-        } catch (Exception e) {
-            try {
-                String sqlQuery2 = "UPDATE TYPES SET icon_id = ? WHERE type = ?";
-                dbWritable.execSQL(sqlQuery2, new String[]{String.valueOf(icon_id), type});
-                dbWritable.setTransactionSuccessful();
-            }catch (Exception e1){
-                LogHandler.saveLog("Failed to insert into TYPES table : " + e1.getLocalizedMessage(),true);
+        try{
+            String sqlQuery = "SELECT * FROM TYPES WHERE type=?";
+            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{type});
+            if (cursor!= null && cursor.moveToFirst()) {
+                try {
+                    dbWritable.beginTransaction();
+                    String sqlQuery2 = "UPDATE TYPES SET icon_id = ? WHERE type = ?";
+                    dbWritable.execSQL(sqlQuery2, new String[]{String.valueOf(icon_id), type});
+                    dbWritable.setTransactionSuccessful();
+                }catch (Exception e1){
+                    LogHandler.saveLog("Failed to insert into TYPES table : " + e1.getLocalizedMessage(),true);
+                }finally {
+                 dbWritable.endTransaction();
+                }
+            } else {
+                try {
+                    dbWritable.beginTransaction();
+                    sqlQuery = "INSERT INTO TYPES (type,icon_id) VALUES (?,?)";
+                    dbWritable.execSQL(sqlQuery, new String[]{type, String.valueOf(icon_id)});
+                    dbWritable.setTransactionSuccessful();
+                } catch (Exception e) {
+                    LogHandler.saveLog("Failed to insert into TYPES table : " + e.getLocalizedMessage(),true);
+                }finally {
+                    dbWritable.endTransaction();
+                }
             }
-        } finally {
-            dbWritable.endTransaction();
+        }catch (Exception e){
+            LogHandler.saveLog("Failed to insert into TYPES table : " + e.getLocalizedMessage(),true);
         }
     }
 
@@ -54,8 +68,8 @@ public class TypeHandler {
             Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(assetId)});
             if (cursor != null && cursor.moveToFirst()) {
                 typeId = cursor.getInt(0);
-                cursor.close();
             }
+            cursor.close();
             return typeId;
         }catch (Exception e){
             LogHandler.saveLog("Failed to get typeId by assetId : (typeId is "+typeId +") error : "+ e.getLocalizedMessage(),true);
@@ -65,36 +79,52 @@ public class TypeHandler {
     }
 
     public static String getTypeNameByTypeId(int typeId){
-        String sqlQuery = "SELECT type FROM TYPES WHERE id=?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(typeId)});
-        String typeName = "";
-        if (cursor != null && cursor.moveToFirst()) {
-            typeName = cursor.getString(0);
+        try{
+            String sqlQuery = "SELECT type FROM TYPES WHERE id=?";
+            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(typeId)});
+            String typeName = "";
+            if (cursor != null && cursor.moveToFirst()) {
+                typeName = cursor.getString(0);
+            }
             cursor.close();
+            return typeName;
+        }catch (Exception e){
+            LogHandler.saveLog("failed to get type by type id : " + e.getLocalizedMessage(), true);
+            return null;
         }
-        return typeName;
     }
 
     public static int getTypeIdByType(String type){
-        String sqlQuery = "SELECT id FROM TYPES WHERE type=?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{type});
-        int typeId = 0;
-        if (cursor != null && cursor.moveToFirst()) {
-            typeId = cursor.getInt(0);
+        try{
+            String sqlQuery = "SELECT id FROM TYPES WHERE type=?";
+            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{type});
+            int typeId = 0;
+            if (cursor != null && cursor.moveToFirst()) {
+                typeId = cursor.getInt(0);
+            }
             cursor.close();
+            return typeId;
+        }catch (Exception e){
+            LogHandler.saveLog("failed to get typeId by type : "+ e.getLocalizedMessage(),true);
+            return -1;
         }
-        return typeId;
+
     }
 
     public static int getIconIdByTypeId(int typeId){
-        String sqlQuery = "SELECT icon_id FROM TYPES WHERE id=?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(typeId)});
-        int iconId = 0;
-        if (cursor!= null && cursor.moveToFirst()) {
-            iconId = cursor.getInt(0);
+        try{
+            String sqlQuery = "SELECT icon_id FROM TYPES WHERE id=?";
+            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(typeId)});
+            int iconId = 0;
+            if (cursor!= null && cursor.moveToFirst()) {
+                iconId = cursor.getInt(0);
+            }
             cursor.close();
+            return iconId;
+        }catch (Exception e){
+            LogHandler.saveLog("failed to get icon_Id by type id : " + e.getLocalizedMessage(), true);
+            return -1;
         }
-        return iconId;
     }
 
     public static int getIconIdByAssetId(int assetId){

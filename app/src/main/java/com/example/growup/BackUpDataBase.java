@@ -25,7 +25,7 @@ public class BackUpDataBase {
                 String databaseFolderId = account.getFolderId();
                 String uploadedFileId = setAndCreateDatabaseContent(service,databaseFolderId,dataBasePath);
                 if (uploadedFileId == null || uploadedFileId.isEmpty()) {
-                    LogHandler.saveLog("Failed to upload profileMap from Android to backup because it's null",true);
+                    LogHandler.saveLog("Failed to backUpDataBaseToDrive from Android to backup because it's null",true);
                     return;
                 }
                 MainActivity.activity.runOnUiThread(()->{
@@ -54,7 +54,7 @@ public class BackUpDataBase {
                     service.files().create(fileMetadata, mediaContent).setFields("id").execute();
             uploadFileId = uploadFile.getId();
         }catch (Exception e){
-            LogHandler.saveLog("Failed to set profile map content:" + e.getLocalizedMessage(), true);
+            LogHandler.saveLog("Failed to setAndCreateDatabaseContent :" + e.getLocalizedMessage(), true);
         }
         return uploadFileId;
     }
