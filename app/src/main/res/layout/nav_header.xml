@@ -11,6 +11,6 @@
         android:text="Grow Up"
         android:textSize="25dp"
         android:gravity="center"
-        android:textColor="#808080" />
+        android:textColor="@color/white"/>
 
 </LinearLayout>
