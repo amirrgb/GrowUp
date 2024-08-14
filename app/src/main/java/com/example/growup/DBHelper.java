@@ -3,6 +3,7 @@ package com.example.growup;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
+import android.text.TextUtils;
 import android.widget.Toast;
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteException;
@@ -62,7 +63,7 @@ public class DBHelper extends SQLiteOpenHelper {
         // Create TYPES table
         String TYPES = "CREATE TABLE IF NOT EXISTS TYPES(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "type TEXT," +
+                "type TEXT UNIQUE," +
                 "icon_id INTEGER)";
         sqLiteDatabase.execSQL(TYPES);
 
@@ -226,17 +227,22 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public String[] getAsset(String id){
-        String sqlQuery = "SELECT * FROM ASSETS WHERE id = ?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{id});
-        String[] result;
-        if(cursor != null && cursor.moveToFirst()){
-            result = new String[]{cursor.getString(0),cursor.getString(1)
-                    ,cursor.getString(2),cursor.getString(3)};
+        try{
+            String sqlQuery = "SELECT * FROM ASSETS WHERE id = ?";
+            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{id});
+            String[] result;
+            if(cursor != null && cursor.moveToFirst()){
+                result = new String[]{cursor.getString(0),cursor.getString(1)
+                        ,cursor.getString(2),cursor.getString(3)};
+            }else{
+                result = new String[]{"","","",""};
+            }
             cursor.close();
-        }else{
-            result = new String[]{"","","",""};
+            return result;
+        }catch (Exception e){
+            LogHandler.saveLog("failed to get Asset : " +e.getLocalizedMessage(), true);
         }
-        return result;
+        return null;
     }
 
     public int getParentId(int id){
@@ -263,9 +269,10 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public ArrayList<String[]> getAssetIdByPid(int pid){
         ArrayList<String[]> assets = new ArrayList<>();
+        Cursor cursor = null;
         try{
             String sqlQuery = "SELECT id,keyword,typeId,updatedAt FROM ASSETS WHERE pid=?";
-            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(pid)});
+            cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(pid)});
             if(cursor != null && cursor.moveToFirst()){
                 do{
                     String id = cursor.getString(0);
@@ -279,6 +286,7 @@ public class DBHelper extends SQLiteOpenHelper {
             cursor.close();
             return assets;
         }catch (Exception e){
+            cursor.close();
             LogHandler.saveLog("Failed to get assets by pid : "+e.getLocalizedMessage(),true);
         }
         return assets;
@@ -331,6 +339,7 @@ public class DBHelper extends SQLiteOpenHelper {
                     return new GoogleCloud.signInResult(email,refreshToken,folderId);
                 }while(cursor.moveToNext());
             }
+            cursor.close();
         }catch (Exception e){
             LogHandler.saveLog("failed to get account from database : " +e.getLocalizedMessage(), true);
         }
@@ -343,8 +352,8 @@ public class DBHelper extends SQLiteOpenHelper {
         Date lastUpdateTime = null;
         if (cursor!= null && cursor.moveToFirst()){
             lastUpdateTime = new Date(Long.parseLong(cursor.getString(0)));
-            cursor.close();
         }
+        cursor.close();
         return lastUpdateTime;
     }
 
@@ -381,6 +390,21 @@ public class DBHelper extends SQLiteOpenHelper {
             LogHandler.saveLog("Failed to get all reminders : " + e.getLocalizedMessage(), true);
         }
         return reminders;
+    }
+
+
+    public static void deleteRedundantTypes(int limit){
+        try{
+            String sqlQuery = "DELETE FROM TYPES WHERE id NOT IN (SELECT id FROM TYPES LIMIT "+limit+")";
+            dbWritable.beginTransaction();
+            dbWritable.execSQL(sqlQuery);
+            dbWritable.setTransactionSuccessful();
+        }catch (Exception e){
+            LogHandler.saveLog("Failed to delete redundant types : " + e.getLocalizedMessage(), true);
+        }finally {
+            dbWritable.endTransaction();
+        }
+
     }
 
 }

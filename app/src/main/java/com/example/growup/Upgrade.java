@@ -13,9 +13,9 @@ public class Upgrade {
             isFirstTime = true;
         } else if (savedVersionCode <= currentVersionCode) {
             switch (savedVersionCode) {
-//                case 1:
-//                    upgrade_1_to_2();
-//                    break;
+                case 1:
+                    upgrade_1_to_2();
+                    break;
                 default:
                     lastVersion();
             }
@@ -35,5 +35,7 @@ public class Upgrade {
             Toast.makeText(MainActivity.activity, "Your App is Up-To-Date Now", Toast.LENGTH_SHORT).show();
         });
     }
-//    public static void upgrade_1_to_2() {}
+    public static void upgrade_1_to_2() {
+        lastVersion();
+    }
 }

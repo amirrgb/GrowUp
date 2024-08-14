@@ -168,7 +168,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                     " FROM REMINDERS WHERE requestCode =?;";
             Cursor cursor = db.rawQuery(sqlQuery, new String[]{String.valueOf(requestCode)});
             if (cursor != null && cursor.moveToFirst()) {
-                return new String[]{
+                String[] temp =  new String[]{
                         cursor.getInt(0) + "", //assetId,
                         cursor.getString(1), //title,
                         cursor.getString(2), //message,
@@ -177,6 +177,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                         cursor.getLong(5) + "", //milisToNextAlarm,
                         cursor.getString(6) //priority
                 };
+                cursor.close();
+                return temp;
             }
         } catch (Exception e) {
             LogHandler.saveLog("Failed to get alarms data: " + e.getLocalizedMessage(), true);
