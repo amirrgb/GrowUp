@@ -20,30 +20,43 @@ import java.util.Date;
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "ALARM_CHANNEL";
     private static final String ACTION_STOP_ALARM = "com.example.growup.ACTION_STOP_ALARM";
+    private static final String ACTION_STOP_AND_CANCEL_ALARMS = "com.example.growup.ACTION_STOP_AND_CANCEL_ALARMS";
     private static Ringtone ringtone;
-    public DBHelper dbHelperForReceiver;
+
 
 
 
     @Override
     public void onReceive(Context context, Intent intent) {
         System.out.println("alarm received : " + intent.getStringExtra("title"));
-        String databaseName = context.getResources().getString(R.string.DataBase_Name);
-        dbHelperForReceiver = new DBHelper(context,databaseName);
         String action = intent.getAction();
+
+        int requestCode = intent.getIntExtra("requestCode", 0);
+        System.out.println("requestCode : " + requestCode);
+        if (requestCode == 0) {
+            return;
+        }
+
         if (ACTION_STOP_ALARM.equals(action)) {
             stopAlarmSound();
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.cancel(0);
             return;
         }
-
-        int requestCode = intent.getIntExtra("requestCode", 0);
-        if (requestCode == 0) {
+        else if (ACTION_STOP_AND_CANCEL_ALARMS.equals(action)) {
+            stopAlarmSound();
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(0);
+            deleteAlarmFromDatabase(context, requestCode);
+            cancelAlarm(context,requestCode);
             return;
         }
 
+
+
+
         String[] alarm = getAlarmsData(context, requestCode);
+        System.out.println("alarm data : " + alarm[0] + ", " + alarm[1]);
         if (alarm == null) {
             return;
         }
@@ -57,7 +70,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (alarmType.equals("repeatDaily") || alarmType.equals("periodicRepeat") || alarmType.equals("hourlyRepeat")) {
             Date nextAlarmDate = new Date(System.currentTimeMillis() + millisToNextAlarm);
             setAlarm(context, nextAlarmDate.getTime(), requestCode, title, message);
-            updateAlarms(context, assetId, title, message, nextAlarmDate);
+            updateAlarms(context, requestCode, title, message, nextAlarmDate);
+        }else{
+            deleteAlarmFromDatabase(context, requestCode);
         }
 
         createNotificationChannel(context);
@@ -65,7 +80,17 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         Intent stopIntent = new Intent(context, AlarmReceiver.class);
         stopIntent.setAction(ACTION_STOP_ALARM);
-        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE);
+        stopIntent.putExtra("requestCode", requestCode);
+        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(
+                context, requestCode, stopIntent, PendingIntent.FLAG_IMMUTABLE
+        );
+
+        Intent cancelNextAlarmsIntent = new Intent(context, AlarmReceiver.class);
+        cancelNextAlarmsIntent.setAction(ACTION_STOP_AND_CANCEL_ALARMS);
+        cancelNextAlarmsIntent.putExtra("requestCode", requestCode);
+        PendingIntent cancelNextAlarmsPendingIntent = PendingIntent.getBroadcast(
+                context, requestCode, cancelNextAlarmsIntent, PendingIntent.FLAG_IMMUTABLE
+        );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.note)
@@ -73,7 +98,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(false)
-                .addAction(R.drawable.ic_lets_go, "Stop", stopPendingIntent);
+                .addAction(R.drawable.ic_lets_go, "Stop", stopPendingIntent)
+                .addAction(R.drawable.ic_lets_go, "Stop & Cancel", cancelNextAlarmsPendingIntent);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, builder.build());
@@ -110,17 +136,18 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
     }
 
-    public void updateAlarms(Context context, int assetId, String title, String message, Date date) {
+    public void updateAlarms(Context context, int requestCode, String title, String message, Date date) {
         String ENCRYPTION_KEY = context.getResources().getString(R.string.ENCRYPTION_KEY);
-        SQLiteDatabase db = dbHelperForReceiver.getWritableDatabase(ENCRYPTION_KEY);
+        SQLiteDatabase db = DBHelper.getInstance(context).getWritableDatabase(ENCRYPTION_KEY);
+
         try {
             db.beginTransaction();
-            String sqlQuery = "UPDATE REMINDERS SET title =?, message =?, date =? WHERE assetId =?;";
+            String sqlQuery = "UPDATE REMINDERS SET title =?, message =?, date =? WHERE requestCode =?;";
             db.execSQL(sqlQuery, new Object[]{
                     title,
                     message,
                     date.toString(),
-                    assetId
+                    requestCode
             });
             db.setTransactionSuccessful();
             db.endTransaction();
@@ -131,7 +158,8 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     public String[] getAlarmsData(Context context, int requestCode) {
         String ENCRYPTION_KEY = context.getResources().getString(R.string.ENCRYPTION_KEY);
-        SQLiteDatabase db = dbHelperForReceiver.getReadableDatabase(ENCRYPTION_KEY);
+        SQLiteDatabase db = DBHelper.getInstance(context).getReadableDatabase(ENCRYPTION_KEY);
+
         try {
             String sqlQuery = "SELECT assetId, title, message, date, alarmType, milisToNextAlarm, priority" +
                     " FROM REMINDERS WHERE requestCode =?;";
@@ -168,6 +196,29 @@ public class AlarmReceiver extends BroadcastReceiver {
             System.out.println("alarm set for time : " + formatter.format(timeInMillis));
         } catch (Exception e) {
             LogHandler.saveLog("Failed to set alarm: " + e.getLocalizedMessage(), true);
+        }
+    }
+
+    public static void cancelAlarm(Context context, int requestCode) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_MUTABLE);
+        alarmManager.cancel(pendingIntent);
+        System.out.println("alarm cancelled for requestCode : " + requestCode);
+    }
+
+    public static void deleteAlarmFromDatabase(Context context, int requestCode) {
+        String ENCRYPTION_KEY = context.getResources().getString(R.string.ENCRYPTION_KEY);
+        SQLiteDatabase db = DBHelper.getInstance(context).getWritableDatabase(ENCRYPTION_KEY);
+        try {
+            db.beginTransaction();
+            String sqlQuery = "DELETE FROM REMINDERS WHERE requestCode =?;";
+            db.execSQL(sqlQuery, new String[]{String.valueOf(requestCode)});
+            db.setTransactionSuccessful();
+            db.endTransaction();
+            System.out.println("alarm deleted for requestCode : " + requestCode);
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to delete alarm from database: " + e.getLocalizedMessage(), true);
         }
     }
 }

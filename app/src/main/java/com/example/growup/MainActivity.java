@@ -3,6 +3,7 @@ package com.example.growup;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -61,6 +63,16 @@ public class MainActivity extends AppCompatActivity {
         noteCreator = new NoteHandler();
         isLinkedToGoogleDrive = BackUpDataBase.isLinkedToGoogleDrive();
         GridAdapter.initializeGridAdapter();
+
+        boolean isFirstLaunch = preferences.getBoolean("isFirstLaunch", true);
+
+        if (isFirstLaunch) {
+            showRebootAlertDialog();
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("isFirstLaunch", false);
+            editor.apply();
+        }
+
     }
 
     @Override
@@ -91,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+        AlarmHandler.rescheduleAlarms(activity);
         if (isLinkedToGoogleDrive){new Thread(BackUpDataBase::backUpDataBaseToDrive).start();}
     }
 
@@ -113,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                                     try {
                                         Thread.sleep(1000);
                                     } catch (Exception e) {
-                                        e.printStackTrace();
+                                        System.out.println("Error while waiting for external storage manager: " + e.getLocalizedMessage());
                                     }
                                 }
                             }
@@ -124,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                             System.out.println("Starting to get access from your android device");
                         }}
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println("Error while checking permissions: " + e.getLocalizedMessage());
                 }
             }
         };
@@ -156,13 +169,13 @@ public class MainActivity extends AppCompatActivity {
         try {
             manageAccessThread.join();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error while waiting for access: " + e.getLocalizedMessage());
         }
         manageReadAndWritePermissonsThread.start();
         try {
             manageReadAndWritePermissonsThread.join();
         }catch (Exception e){
-            e.printStackTrace();
+            System.out.println("Error while waiting for read and write permissions: " + e.getLocalizedMessage());
         }
 
     }
@@ -229,5 +242,18 @@ public class MainActivity extends AppCompatActivity {
         GridAdapter.initializeGridAdapter();
     }
 
+    private void showRebootAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Important Information");
+        builder.setMessage("Please note that the app needs to be opened at least once after installation or reboot to reschedule your alarms. Thank you!");
 
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            dialog.dismiss();
+        });
+
+        builder.setIcon(android.R.drawable.ic_dialog_alert);
+        builder.setCancelable(false);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
 }

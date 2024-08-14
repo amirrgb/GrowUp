@@ -11,30 +11,39 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 public class DBHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = MainActivity.activity.getResources().getString(R.string.DataBase_Name);
+    public static Context DBcontext;
     public static final int DATABASE_VERSION = 12;
     public static SQLiteDatabase dbReadable;
     public static SQLiteDatabase dbWritable;
-    private static final String ENCRYPTION_KEY = MainActivity.activity.getResources().getString(R.string.ENCRYPTION_KEY);
+
+    private static DBHelper instance;
 
     public DBHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        super(context, context.getResources().getString(R.string.DataBase_Name), null, DATABASE_VERSION);
+        String ENCRYPTION_KEY = context.getResources().getString(R.string.ENCRYPTION_KEY);
         SQLiteDatabase.loadLibs(context);
+        try {
+            DBcontext = MainActivity.activity;
+        }catch (Exception e) {
+            DBcontext = context;
+        }
         dbReadable = getReadableDatabase(ENCRYPTION_KEY);
         dbWritable = getReadableDatabase(ENCRYPTION_KEY);
         onCreate(getWritableDatabase(ENCRYPTION_KEY));
         TypeHandler.TypeInitializer();
     }
 
-    public DBHelper(Context context,String name) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        SQLiteDatabase.loadLibs(context);
-        dbReadable = getReadableDatabase(ENCRYPTION_KEY);
-        dbWritable = getReadableDatabase(ENCRYPTION_KEY);
-        onCreate(getWritableDatabase(ENCRYPTION_KEY));
+
+    public static synchronized DBHelper getInstance(Context context) {
+        if (instance == null) {
+            instance = new DBHelper(context.getApplicationContext());
+        }
+        return instance;
     }
+
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
@@ -133,12 +142,7 @@ public class DBHelper extends SQLiteOpenHelper {
             dbWritable.execSQL(sqlQuery,new Object[]{email,refreshToken,folderId});
             dbWritable.setTransactionSuccessful();
         }catch (SQLiteConstraintException e){
-            MainActivity.activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(MainActivity.activity, "Duplicate Account", Toast.LENGTH_SHORT).show();
-                }
-            });
+            Toast.makeText(DBcontext, "Duplicate Account", Toast.LENGTH_SHORT).show();
             return false;
         }catch (Exception e){
             LogHandler.saveLog("Failed to insert into Accounts table : " + e.getLocalizedMessage(),true);
@@ -160,7 +164,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 dbWritable.setTransactionSuccessful();
                 result[0] = true;
             } catch(SQLiteConstraintException ee) {
-                MainActivity.activity.runOnUiThread(() -> Toast.makeText(MainActivity.activity, "Duplicate Keyword", Toast.LENGTH_SHORT).show());
+                Toast.makeText(DBcontext, "Duplicate Keyword", Toast.LENGTH_SHORT).show();
             }catch(Exception e) {
                 LogHandler.saveLog("Failed to insert into ASSETS table : " + e.getLocalizedMessage(),true);
             } finally {
@@ -352,4 +356,31 @@ public class DBHelper extends SQLiteOpenHelper {
         dbWritable.setTransactionSuccessful();
         dbWritable.endTransaction();
     }
+
+    public List<String[]> getAllAlarms() {
+        ArrayList<String[]> reminders = new ArrayList<>();
+        try {
+            String sqlQuery = "SELECT assetId, title, message, date, alarmType, milisToNextAlarm, priority, requestCode FROM REMINDERS";
+            Cursor cursor = dbReadable.rawQuery(sqlQuery, null);
+            if (cursor!= null && cursor.moveToFirst()) {
+                do {
+                    String assetId = cursor.getString(0);
+                    String title = cursor.getString(1);
+                    String message = cursor.getString(2);
+                    String date = cursor.getString(3);
+                    String alarmType = cursor.getString(4);
+                    String milisToNextAlarm = cursor.getLong(5) + "";
+                    String priority = cursor.getString(6);
+                    String requestCode = cursor.getString(7);
+                    String[] reminder = {assetId, title, message, date, alarmType, milisToNextAlarm, priority,requestCode};
+                    reminders.add(reminder);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to get all reminders : " + e.getLocalizedMessage(), true);
+        }
+        return reminders;
+    }
+
 }
