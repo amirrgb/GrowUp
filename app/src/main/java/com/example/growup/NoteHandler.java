@@ -83,7 +83,11 @@ public class NoteHandler {
             });
             return false;
         } else {
-            MainActivity.dbHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId), title, content);
+            String previousTitle = MainActivity.dbHelper.getNote(MainActivity.currentId)[0];
+            String previousMessage = MainActivity.dbHelper.getNote(MainActivity.currentId)[1];
+            if (!previousTitle.equals(title) ||!previousMessage.equals(content)) {
+                MainActivity.dbHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId), title, content);
+            }
             return true;
         }
 

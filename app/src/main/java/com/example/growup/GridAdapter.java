@@ -136,7 +136,8 @@ public class GridAdapter extends BaseAdapter {
         TextView textViewName = gridView.findViewById(R.id.textViewName);
         ImageView imageViewIcon = gridView.findViewById(R.id.imageViewIcon);
 
-        textViewName.setText(assetsName.get(position));
+        String assetName = assetsName.get(position);
+        textViewName.setText(limitAssetNameText(assetName));
         imageViewIcon.setImageResource(assetsIcon.get(position));
 
         gridView.setOnClickListener(v -> itemsActions(position));
@@ -259,4 +260,10 @@ public class GridAdapter extends BaseAdapter {
         return allAssets;
     }
 
+    public static String limitAssetNameText(String name){
+        if (name.length() > 30){
+            return name.substring(0, 30) + "...";
+        }
+        return name;
+    }
 }
