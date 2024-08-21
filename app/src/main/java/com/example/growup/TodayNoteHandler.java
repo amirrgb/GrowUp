@@ -59,9 +59,9 @@ public class TodayNoteHandler {
         for (Alarm alarm : alarms) {
             if (isAlarmForToday(alarm.getDate())) {
                 sb.append(alarm.getTitle())
-                    .append(" at ")
-                    .append(alarm.getDate())
-                    .append("\n\n\n");
+                    .append(" : \n")
+                    .append(getHourAndMinuteOfDate(alarm.getDate()))
+                    .append("\n\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
             }
         }
         return sb.toString().trim();
@@ -93,4 +93,15 @@ public class TodayNoteHandler {
         Setting.setListenerForButtons();
     }
 
+    public static String getHourAndMinuteOfDate(String date){
+        try{
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
+            Date date1 = dateFormat.parse(date);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.ENGLISH);
+            return simpleDateFormat.format(date1);
+        }catch (Exception e){
+            LogHandler.saveLog("failed to parse date in getHourAndMinuteOfDate method : " + e.getLocalizedMessage(), true);
+        }
+    return "";
+    }
 }
