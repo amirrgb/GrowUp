@@ -8,11 +8,12 @@ import android.database.Cursor;
 public class TypeHandler {
 
     public static void TypeInitializer(){
-        DBHelper.deleteRedundantTypes(4);
+//        DBHelper.deleteRedundantTypes(5);
         TypeHandler.insertIntoTypesTable("folder",R.drawable.ic_folder);
         TypeHandler.insertIntoTypesTable("note",R.drawable.ic_note);
         TypeHandler.insertIntoTypesTable("pin_folder",R.drawable.ic_pin_folder);
         TypeHandler.insertIntoTypesTable("pin_note",R.drawable.ic_pin_note);
+        TypeHandler.insertIntoTypesTable("today_note", R.drawable.ic_today);
     }
 
     public static void insertIntoTypesTable(String type, int icon_id){

@@ -251,16 +251,16 @@ public class AlarmHandler {
 
     public static void rescheduleAlarms(Context context) {
         DBHelper dbHelper = DBHelper.getInstance(context);
-        List<String[]> alarms = dbHelper.getAllAlarms();
+        List<Alarm> alarms = DBHelper.getAllAlarms();
         System.out.println("size of alarms: " + alarms.size());
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
 
-        for (String[] alarm : alarms) {
-            String title = alarm[1];
-            String message = alarm[2];
-            String date = alarm[3];
-            int requestCode = Integer.parseInt(alarm[7]);
+        for (Alarm alarm : alarms) {
+            String title = alarm.getTitle();
+            String message = alarm.getMessage();
+            String date = alarm.getDate();
+            int requestCode = Integer.parseInt(alarm.getRequestCode());
 
             try {
                 Date alarmDate = dateFormat.parse(date);

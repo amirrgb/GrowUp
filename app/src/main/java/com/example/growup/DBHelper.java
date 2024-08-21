@@ -366,8 +366,8 @@ public class DBHelper extends SQLiteOpenHelper {
         dbWritable.endTransaction();
     }
 
-    public List<String[]> getAllAlarms() {
-        ArrayList<String[]> reminders = new ArrayList<>();
+    public static List<Alarm> getAllAlarms() {
+        ArrayList<Alarm> alarms = new ArrayList<>();
         try {
             String sqlQuery = "SELECT assetId, title, message, date, alarmType, milisToNextAlarm, priority, requestCode FROM REMINDERS";
             Cursor cursor = dbReadable.rawQuery(sqlQuery, null);
@@ -381,15 +381,15 @@ public class DBHelper extends SQLiteOpenHelper {
                     String milisToNextAlarm = cursor.getLong(5) + "";
                     String priority = cursor.getString(6);
                     String requestCode = cursor.getString(7);
-                    String[] reminder = {assetId, title, message, date, alarmType, milisToNextAlarm, priority,requestCode};
-                    reminders.add(reminder);
+                    Alarm alarm = new Alarm(assetId, title, message, date, alarmType, milisToNextAlarm, priority, requestCode);
+                    alarms.add(alarm);
                 } while (cursor.moveToNext());
             }
             cursor.close();
         } catch (Exception e) {
             LogHandler.saveLog("Failed to get all reminders : " + e.getLocalizedMessage(), true);
         }
-        return reminders;
+        return alarms;
     }
 
 
