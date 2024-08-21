@@ -186,6 +186,11 @@ public class MainActivity extends AppCompatActivity {
             GridAdapter.initializeGridAdapter();
             return;
         }
+        if (TodayNoteHandler.onTodayNoteScreen){
+            GridAdapter.initializeGridAdapter();
+            TodayNoteHandler.onTodayNoteScreen = false;
+            return;
+        }
         if (dbHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }

@@ -60,6 +60,12 @@ public class GridAdapter extends BaseAdapter {
         assetsName = new ArrayList<>();
         assetsIcon = new ArrayList<>();
 
+        if (MainActivity.currentId == 0) {
+            assetsName.add("Today");
+            assetsIcon.add(R.drawable.ic_today);
+            assetsId.add(tempAssetId);
+        }
+
         for (ArrayList<String[]> assetTypes : sortedAssets) {
             for (String[] asset : assetTypes) {
                 int assetId = Integer.parseInt(asset[0]);
@@ -150,6 +156,10 @@ public class GridAdapter extends BaseAdapter {
         if (assetsIcon.get(position) == R.drawable.ic_add_folder) {
             showAddFolderDialog();
             return;
+        }
+
+        if (assetsIcon.get(position) == R.drawable.ic_today) {
+            TodayNoteHandler.openTodayNote();
         }
 
         int assetId = assetsId.get(position);

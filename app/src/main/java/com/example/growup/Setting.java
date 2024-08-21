@@ -73,6 +73,11 @@ public class Setting {
         app_setting_back_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (TodayNoteHandler.onTodayNoteScreen){
+                    TodayNoteHandler.onTodayNoteScreen = false;
+                    GridAdapter.initializeGridAdapter();
+                    return;
+                }
                 if (MainActivity.currentId == 0){
                     Setting.initializeDrawerLayout(MainActivity.activity);
                 }else{

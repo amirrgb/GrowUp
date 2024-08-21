@@ -19,13 +19,13 @@ public class BootReceiver extends BroadcastReceiver {
 
     private void rescheduleAlarms(Context context) {
         DBHelper dbHelper = DBHelper.getInstance(context);
-        List<String[]> alarms = dbHelper.getAllAlarms();
+        List<Alarm> alarms = dbHelper.getAllAlarms();
         System.out.println("size of alarms: " + alarms.size());
-        for (String[] alarm : alarms) {
-            String title = alarm[1];
-            String message = alarm[2];
-            String date = alarm[3];
-            int requestCode = Integer.parseInt(alarm[7]);
+        for (Alarm alarm : alarms) {
+            String title = alarm.getTitle();
+            String message = alarm.getMessage();
+            String date = alarm.getDate();
+            int requestCode = Integer.parseInt(alarm.getRequestCode());
             Date alarmDate = new Date(Long.parseLong(date));
             AlarmReceiver.setAlarm(context, alarmDate.getTime(),requestCode, title, message);
         }
