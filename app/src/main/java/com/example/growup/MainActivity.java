@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
             Setting.setListenerForButtons();
         }
         boolean canSaveNote = true;
-        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note")) {
+        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {
             if (!NoteHandler.saveNote()){
                 MainActivity.noteCreator.openNote();
                 canSaveNote = false;
@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
         if (dbHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
-        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note")) {
+        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {
             if (!NoteHandler.saveNote()){
                 MainActivity.noteCreator.openNote();
             }
@@ -223,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         if (dbHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
-        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note")) {
+        if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {
             if (!NoteHandler.saveNote()){
                 MainActivity.noteCreator.openNote();
             }
