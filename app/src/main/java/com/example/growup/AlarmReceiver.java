@@ -186,7 +186,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         return null;
     }
 
-    @SuppressLint("ScheduleExactAlarm")
     public static void setAlarm(Context context, long timeInMillis, int requestCode, String title, String message) {
         try {
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -196,7 +195,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             intent.putExtra("requestCode", requestCode);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_MUTABLE);
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent);
+            alarmManager.set(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent);
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
             System.out.println("alarm set for time : " + formatter.format(timeInMillis));
         } catch (Exception e) {
