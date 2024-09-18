@@ -15,7 +15,7 @@
 .externalNativeBuild
 .cxx
 local.properties
-/gradle
 
+gradle
 
 app/src/main/res/values/strings.xml
