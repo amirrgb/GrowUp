@@ -1,5 +1,7 @@
 # Personal Planner & Notebook App
 
+*Organize your life and never miss a task again with the Personal Planner & Notebook App.*
+
 Because of the various activities, tasks, and communications over the years, I believe a good planner and notebook can be a valuable assistant to help manage our daily lives. This project aims to be that assistant, providing an intuitive and feature-rich planner app to help users keep track of their tasks, events, and important notes.
 
 ## Features
@@ -100,19 +102,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For any questions, suggestions, or feedback, feel free to reach out:
 
 - **Email**: rajabi.amir@ut.ac.ir
----
-
-*Organize your life and never miss a task again with the Personal Planner & Notebook App.*
-```
-
-### Explanation:
-- **Introduction**: Starts by explaining the motivation behind creating this project.
-- **Features**: Describes the app's functionality clearly.
-- **Benefits**: Lists the advantages of using the app.
-- **Tools & Technologies**: Lists the programming languages, databases, and other tools used.
-- **Getting Started**: Explains how to clone and run the project.
-- **Future Enhancements**: Lists planned features, indicating that development is ongoing.
-- **Contributing**: Explains how others can contribute.
-- **License**: Specifies the license under which the project is released.
-
-Feel free to update the `Future Enhancements` or `Contact` section as needed.
