@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.Toolbar
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/toolbar"
+    android:layout_alignParentTop="true"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:background="?attr/colorPrimary"
+    tools:targetApi="n">
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/setting_button"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@drawable/app_setting"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        tools:ignore="HardcodedText">
+    </androidx.appcompat.widget.AppCompatButton>
+
+    <TextView
+        android:id="@+id/headerTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingStart="5dp"
+        android:text="Home"
+        android:textColor="@color/white"
+        tools:ignore="HardcodedText" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/sync_button"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@drawable/google_drive"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        tools:ignore="HardcodedText">
+
+    </androidx.appcompat.widget.AppCompatButton>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/pasteHereButton"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:layout_marginEnd="50dp"
+        android:background="@drawable/ic_paste"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        tools:ignore="HardcodedText"
+        android:visibility="gone"
+        >
+    </androidx.appcompat.widget.AppCompatButton>
+
+
+</androidx.appcompat.widget.Toolbar>
