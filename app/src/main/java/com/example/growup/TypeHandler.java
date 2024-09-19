@@ -14,6 +14,8 @@ public class TypeHandler {
         TypeHandler.insertIntoTypesTable("pin_folder",R.drawable.ic_pin_folder);
         TypeHandler.insertIntoTypesTable("pin_note",R.drawable.ic_pin_note);
         TypeHandler.insertIntoTypesTable("today_note", R.drawable.ic_today);
+        TypeHandler.insertIntoTypesTable("fill_note", R.drawable.ic_fill_note);
+        TypeHandler.insertIntoTypesTable("pin_fill_note", R.drawable.ic_pin_fill_note);
     }
 
     public static void insertIntoTypesTable(String type, int icon_id) {
@@ -154,6 +156,16 @@ public class TypeHandler {
 
     public static int getIconIdByAssetId(int assetId){
         int typeId = getTypeIdByAssetId(assetId);
+        if (getTypeNameByTypeId(typeId).equals("note")){
+            if (isFillNote(assetId)){
+                return R.drawable.ic_fill_note;
+            }
+        } else if (getTypeNameByTypeId(typeId).equals("pin_note")) {
+            if (isFillNote(assetId)){
+                return R.drawable.ic_pin_fill_note;
+            }
+            
+        }
         return getIconIdByTypeId(typeId);
     }
 
@@ -162,4 +174,8 @@ public class TypeHandler {
         return getTypeNameByTypeId(typeId);
     }
 
+    public static boolean isFillNote(int assetId){
+        String[] note = DBHelper.getNote(assetId);
+        return !note[1].isEmpty();
+    }
 }

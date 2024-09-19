@@ -85,7 +85,7 @@ public class GridItemsPopupMenu {
     }
 
     public static void deleteItem(int assetId) {
-        MainActivity.dbHelper.deleteAsset(assetId);
+        DBHelper.deleteAsset(assetId);
         MainActivity.adapter.updateGridAdapter();
     }
 
@@ -102,10 +102,10 @@ public class GridItemsPopupMenu {
                 Tools.toast("Folder name can't be empty");
                 return;
             } else {
-                MainActivity.dbHelper.updateAssetName(String.valueOf(assetId), newFolderName);
+                DBHelper.updateAssetName(String.valueOf(assetId), newFolderName);
                 assetsName.add(newFolderName);
                 assetsIcon.add(R.drawable.ic_folder);
-                assetsId.add(Integer.valueOf(MainActivity.dbHelper.getLastId()));
+                assetsId.add(Integer.valueOf(DBHelper.getLastId()));
             }
             MainActivity.adapter.updateGridAdapter();
         });

@@ -19,10 +19,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import net.sqlcipher.database.SQLiteDebug;
+
 
 public class MainActivity extends AppCompatActivity {
     public static Activity activity;
-    public static DBHelper dbHelper;
     public static int currentId = 0;
     public static SharedPreferences preferences;
     public static GridAdapter adapter;
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
 //        checkPermissions(); // can copy from stash
 
         preferences = getPreferences(Context.MODE_PRIVATE);
-        dbHelper = new DBHelper(this);
+        DBHelper.getInstance(activity);
         Upgrade.versionHandler(preferences);
         googleCloud = new GoogleCloud(this);
         noteCreator = new NoteHandler();
@@ -162,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
             TodayNoteHandler.onTodayNoteScreen = false;
             return;
         }
-        if (dbHelper.getParentId(currentId) == 0){
+        if (DBHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
         boolean canSaveNote = true;
@@ -173,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (canSaveNote){
-            currentId = dbHelper.getParentId(currentId);
+            currentId = DBHelper.getParentId(currentId);
             GridAdapter.initializeGridAdapter();
         }
     }
@@ -184,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (dbHelper.getParentId(currentId) == 0){
+        if (DBHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
         if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {
@@ -196,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (dbHelper.getParentId(currentId) == 0){
+        if (DBHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
         if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {

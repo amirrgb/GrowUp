@@ -27,14 +27,12 @@ public class DBHelper extends SQLiteOpenHelper {
         TypeHandler.TypeInitializer();
     }
 
-
     public static synchronized DBHelper getInstance(Context context) {
         if (instance == null) {
             instance = new DBHelper(context.getApplicationContext());
         }
         return instance;
     }
-
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
@@ -121,8 +119,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-
-
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {}
 
@@ -145,7 +141,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     //should change to protected from sql injection
-    public boolean insertIntoAssetsTable(String keyword, int typeId, int pid){
+    public static boolean insertIntoAssetsTable(String keyword, int typeId, int pid){
         boolean[] result = {false};
         Thread insertThread = new Thread(() -> {
             try {
@@ -171,7 +167,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return result[0];
     }
 
-    public void insertIntoNotesTable(String id,String title,String content){
+    public static void insertIntoNotesTable(String id,String title,String content){
         System.out.println("data for insert is : "+ id + " " + title + " "
          + content);
         try {
@@ -189,7 +185,7 @@ public class DBHelper extends SQLiteOpenHelper {
         updateAssetName(id,title);
     }
 
-    public void updateAssetName(String id, String title) {
+    public static void updateAssetName(String id, String title) {
         try {
             dbWritable.beginTransaction();
             String sqlQuery = "UPDATE ASSETS SET KEYWORD = ? WHERE id = ?";
@@ -202,7 +198,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public String[] getAsset(String id) {
+    public static String[] getAsset(String id) {
         Cursor cursor = null;
         try {
             String sqlQuery = "SELECT * FROM ASSETS WHERE id = ?";
@@ -232,8 +228,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-
-    public int getParentId(int id) {
+    public static int getParentId(int id) {
         if (id == 0) {
             return 0;
         }
@@ -259,8 +254,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return parentId;
     }
 
-
-    public void deleteAsset(int id){
+    public static void deleteAsset(int id){
         dbWritable.beginTransaction();
         String sqlQuery = "DELETE FROM ASSETS WHERE id = ?";
         dbWritable.execSQL(sqlQuery, new Object[]{id});
@@ -268,7 +262,7 @@ public class DBHelper extends SQLiteOpenHelper {
         dbWritable.endTransaction();
     }
 
-    public ArrayList<String[]> getAssetIdByPid(int pid) {
+    public static ArrayList<String[]> getAssetIdByPid(int pid) {
         ArrayList<String[]> assets = new ArrayList<>();
         Cursor cursor = null;
         try {
@@ -295,8 +289,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return assets;
     }
 
-
-    public String[] getNote(int currentId) {
+    public static String[] getNote(int currentId) {
         String[] note = new String[2];
         Cursor cursor = null;
 
@@ -319,8 +312,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return note;
     }
 
-
-    public String getLastId() {
+    public static String getLastId() {
         String lastId = "";
         Cursor cursor = null;
 
@@ -344,7 +336,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
         return lastId;
     }
-
 
     public static GoogleCloud.signInResult getAccount() {
         Cursor cursor = null;
@@ -375,7 +366,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return null;
     }
 
-    public void moveAsset(int assetId, int newParentId){
+    public static void moveAsset(int assetId, int newParentId){
         dbWritable.beginTransaction();
         String sqlQuery = "UPDATE ASSETS SET pid=? WHERE id=?";
         dbWritable.execSQL(sqlQuery, new Object[]{newParentId, assetId});
@@ -408,7 +399,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return alarms;
     }
-
 
     public static void recreateRemindersTable() {
         try {

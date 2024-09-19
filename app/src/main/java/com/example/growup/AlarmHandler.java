@@ -108,7 +108,7 @@ public class AlarmHandler {
 
         // Date Section //
         int assetId = assetsId.get(position);
-        String[] note = MainActivity.dbHelper.getNote(assetId);
+        String[] note = DBHelper.getNote(assetId);
         String title = note[0];
         String message = note[1];
         int requestCode = (int) new Date().getTime();

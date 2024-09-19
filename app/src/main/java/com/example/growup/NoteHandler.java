@@ -21,10 +21,10 @@ public class NoteHandler {
                 if (noteName.isEmpty()) {
                     Tools.toast("Note name cannot be empty");
                 } else {
-                    if (MainActivity.dbHelper.insertIntoAssetsTable(noteName,
+                    if (DBHelper.insertIntoAssetsTable(noteName,
                             TypeHandler.getTypeIdByType("note"), MainActivity.currentId)) {
-                        String lastId = MainActivity.dbHelper.getLastId();
-                        MainActivity.dbHelper.insertIntoNotesTable(lastId, noteName, "");
+                        String lastId = DBHelper.getLastId();
+                        DBHelper.insertIntoNotesTable(lastId, noteName, "");
                         Tools.toast("Note created");
                         MainActivity.adapter.readChildItemsOf(MainActivity.currentId);
                         MainActivity.adapter.updateGridAdapter();
@@ -41,7 +41,7 @@ public class NoteHandler {
     public void openNote() {
         MainActivity.activity.setContentView(R.layout.note_item);
         MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
-        String[] temp = MainActivity.dbHelper.getNote(MainActivity.currentId);
+        String[] temp = DBHelper.getNote(MainActivity.currentId);
         String title = temp[0];
         String content = temp[1];
         EditText textViewTitle = MainActivity.activity.findViewById(R.id.textViewTitle);
@@ -60,10 +60,10 @@ public class NoteHandler {
             Tools.toast("Title cannot be empty");
             return false;
         } else {
-            String previousTitle = MainActivity.dbHelper.getNote(MainActivity.currentId)[0];
-            String previousMessage = MainActivity.dbHelper.getNote(MainActivity.currentId)[1];
+            String previousTitle = DBHelper.getNote(MainActivity.currentId)[0];
+            String previousMessage = DBHelper.getNote(MainActivity.currentId)[1];
             if (!previousTitle.equals(title) ||!previousMessage.equals(content)) {
-                MainActivity.dbHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId), title, content);
+                DBHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId), title, content);
             }
             return true;
         }

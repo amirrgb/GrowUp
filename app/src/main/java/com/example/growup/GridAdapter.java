@@ -51,7 +51,7 @@ public class GridAdapter extends BaseAdapter {
     }
 
     public void readChildItemsOf(int pid) {
-        ArrayList<String[]> assets = MainActivity.dbHelper.getAssetIdByPid(pid);
+        ArrayList<String[]> assets = DBHelper.getAssetIdByPid(pid);
         ArrayList<ArrayList<String[]>> sortedAssets = categorizeAssets(assets);
         assetsId = new ArrayList<>();
         assetsName = new ArrayList<>();
@@ -83,7 +83,7 @@ public class GridAdapter extends BaseAdapter {
         if (GridAdapter.movingStatus){
             pasteButton.setVisibility(View.VISIBLE);
             pasteButton.setOnClickListener(v -> {
-                MainActivity.dbHelper.moveAsset(GridAdapter.movingAssetId, MainActivity.currentId);
+                DBHelper.moveAsset(GridAdapter.movingAssetId, MainActivity.currentId);
                 GridAdapter.movingStatus = false;
                 GridAdapter.movingAssetId = -1;
                 MainActivity.adapter.updateGridAdapter();
@@ -96,7 +96,7 @@ public class GridAdapter extends BaseAdapter {
             MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.app_setting);
             return;
         }
-        String headerText = MainActivity.dbHelper.getAsset(String.valueOf(MainActivity.currentId))[2];
+        String headerText = DBHelper.getAsset(String.valueOf(MainActivity.currentId))[2];
         header.setText(headerText);
         MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
     }
@@ -140,8 +140,6 @@ public class GridAdapter extends BaseAdapter {
             GridItemsPopupMenu.displayPopUpMenu(position, gridView, mContext);
             return true;
         });
-
-        //drag and drop
 
         return gridView;
     }
@@ -190,7 +188,7 @@ public class GridAdapter extends BaseAdapter {
                 Tools.toast("Folder name can't be empty");
                 return;
             }
-            boolean isCreated = MainActivity.dbHelper.insertIntoAssetsTable(newFolderName,
+            boolean isCreated = DBHelper.insertIntoAssetsTable(newFolderName,
                     TypeHandler.getTypeIdByType("folder"), MainActivity.currentId);
             if (!isCreated){
                 Tools.toast("cant create Folder");
