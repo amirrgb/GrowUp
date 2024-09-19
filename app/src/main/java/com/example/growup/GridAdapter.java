@@ -10,14 +10,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Locale;
 
 public class GridAdapter extends BaseAdapter {
 
@@ -85,20 +82,17 @@ public class GridAdapter extends BaseAdapter {
         Button pasteButton = MainActivity.activity.findViewById(R.id.pasteHereButton);
         if (GridAdapter.movingStatus){
             pasteButton.setVisibility(View.VISIBLE);
-            pasteButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    MainActivity.dbHelper.moveAsset(GridAdapter.movingAssetId, MainActivity.currentId);
-                    GridAdapter.movingStatus = false;
-                    GridAdapter.movingAssetId = -1;
-                    MainActivity.adapter.updateGridAdapter();
-                }
+            pasteButton.setOnClickListener(v -> {
+                MainActivity.dbHelper.moveAsset(GridAdapter.movingAssetId, MainActivity.currentId);
+                GridAdapter.movingStatus = false;
+                GridAdapter.movingAssetId = -1;
+                MainActivity.adapter.updateGridAdapter();
             });
         }else{
             pasteButton.setVisibility(View.GONE);
         }
         if (MainActivity.currentId == 0){
-            header.setText("Home");
+            header.setText(R.string.Home);
             MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.app_setting);
             return;
         }
@@ -143,7 +137,7 @@ public class GridAdapter extends BaseAdapter {
         gridView.setOnClickListener(v -> itemsActions(position));
 
         gridView.setOnLongClickListener(v -> {
-            GridItemsPopupMenu.displayPopUpMenu(position, gridView);
+            GridItemsPopupMenu.displayPopUpMenu(position, gridView, mContext);
             return true;
         });
 
@@ -168,7 +162,7 @@ public class GridAdapter extends BaseAdapter {
             case "pin_note":
             case "note":
                 if (movingStatus){
-                    MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "paste selected asset first", Toast.LENGTH_SHORT).show());
+                    Tools.toast("paste selected asset first");
                     return;
                 }
                 MainActivity.currentId = assetsId.get(position);
@@ -193,13 +187,13 @@ public class GridAdapter extends BaseAdapter {
         builder.setPositiveButton("Add", (dialog, which) -> {
             String newFolderName = input.getText().toString();
             if (newFolderName.isEmpty()){
-                MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "Folder name can't be empty", Toast.LENGTH_SHORT).show());
+                Tools.toast("Folder name can't be empty");
                 return;
             }
             boolean isCreated = MainActivity.dbHelper.insertIntoAssetsTable(newFolderName,
                     TypeHandler.getTypeIdByType("folder"), MainActivity.currentId);
             if (!isCreated){
-                MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "cant create Folder", Toast.LENGTH_SHORT).show());
+                Tools.toast("cant create Folder");
             }
             MainActivity.adapter.updateGridAdapter();
         });
@@ -210,12 +204,15 @@ public class GridAdapter extends BaseAdapter {
     }
 
     public static ArrayList<String[]> sortAssets(ArrayList<String[]> assets, boolean isAscending) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
 
         Collections.sort(assets, (o1, o2) -> {
             try {
-                Date updatedAt1 = dateFormat.parse(o1[3]);
-                Date updatedAt2 = dateFormat.parse(o2[3]);
+                Date updatedAt1 = Tools.dateFormat.parse(o1[3]);
+                Date updatedAt2 = Tools.dateFormat.parse(o2[3]);
+                if (updatedAt1 == null || updatedAt2 == null){
+                    return 0;
+                }
                 return isAscending ? updatedAt1.compareTo(updatedAt2) : updatedAt2.compareTo(updatedAt1);
             } catch (ParseException e) {
                 LogHandler.saveLog("Error while sorting assets: " + e.getMessage(), true);

@@ -3,6 +3,7 @@ package com.example.growup;
 import android.content.Intent;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 
@@ -20,6 +21,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -157,7 +159,7 @@ public class GoogleCloud extends AppCompatActivity {
                     String response = responseBuilder.toString();
                     System.out.println("checking 9");
                     JSONObject responseJSONObject = new JSONObject(response);
-                    System.out.println(responseJSONObject.toString());
+                    System.out.println(responseJSONObject);
                     refreshToken = responseJSONObject.getString("refresh_token");
                     System.out.println("checking 10");
                     return refreshToken;
@@ -183,8 +185,8 @@ public class GoogleCloud extends AppCompatActivity {
 
     public static class signInResult{
         private final String userEmail;
-        private String refreshToken;
-        private String folderId;
+        private final String refreshToken;
+        private final String folderId;
 
         public signInResult(String userEmail, String refreshToken,String folderId) {
             this.userEmail = userEmail;
@@ -199,7 +201,7 @@ public class GoogleCloud extends AppCompatActivity {
     public String updateAccessToken(String refreshToken){
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Callable<String> backgroundTokensTask = () -> {
-            String accessToken = null;
+            String accessToken = "";
             try {
                 URL googleAPITokenUrl = new URL("https://www.googleapis.com/oauth2/v4/token");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) googleAPITokenUrl.openConnection();
@@ -220,16 +222,7 @@ public class GoogleCloud extends AppCompatActivity {
                 int responseCode = httpURLConnection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     LogHandler.saveLog("Updating access token with response code of " + responseCode,false);
-                    StringBuilder responseBuilder = new StringBuilder();
-                    BufferedReader bufferedReader = new BufferedReader(
-                            new InputStreamReader(httpURLConnection.getInputStream())
-                    );
-                    String line;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        responseBuilder.append(line);
-                    }
-                    String response = responseBuilder.toString();
-                    JSONObject responseJSONObject = new JSONObject(response);
+                    JSONObject responseJSONObject = getJsonObject(httpURLConnection);
                     accessToken = responseJSONObject.getString("access_token");
                     return accessToken;
                 }else {
@@ -250,6 +243,19 @@ public class GoogleCloud extends AppCompatActivity {
             executor.shutdown();
         }
         return tokens_fromFuture;
+    }
+
+    private static @NonNull JSONObject getJsonObject(HttpURLConnection httpURLConnection) throws IOException, JSONException {
+        StringBuilder responseBuilder = new StringBuilder();
+        BufferedReader bufferedReader = new BufferedReader(
+                new InputStreamReader(httpURLConnection.getInputStream())
+        );
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+            responseBuilder.append(line);
+        }
+        String response = responseBuilder.toString();
+        return new JSONObject(response);
     }
 
     private static String createGrowUpFolderInDrive(Drive service){
@@ -288,7 +294,7 @@ public class GoogleCloud extends AppCompatActivity {
         return service;
     }
 
-    public static boolean isAccessTokenValid(String accessToken) throws IOException {
+    public static boolean isAccessTokenValid(String accessToken) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Callable<Boolean> callableTask = () -> {
             String tokenInfoUrl = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + accessToken;

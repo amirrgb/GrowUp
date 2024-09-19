@@ -3,7 +3,6 @@ package com.example.growup;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -11,26 +10,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 import android.widget.GridView;
-import android.widget.LinearLayout;
-import android.widget.PopupMenu;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-
-import com.google.android.material.navigation.NavigationView;
-
-import java.util.Calendar;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -52,9 +39,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         new Thread(MainActivity::checkPermissions).start();
 //        checkPermissions(); // can copy from stash
-
-        LogHandler.CreateLogFile();
-
 
         preferences = getPreferences(Context.MODE_PRIVATE);
         dbHelper = new DBHelper(this);
@@ -89,9 +73,7 @@ public class MainActivity extends AppCompatActivity {
                             final GoogleCloud.signInResult signInResult =
                                     googleCloud.handleSignInThread(result.getData());
                             if (signInResult.getUserEmail() == null || signInResult.getFolderId() == null){
-                                MainActivity.activity.runOnUiThread(() -> {
-                                Toast.makeText(MainActivity.this, "Login Failed (Because of VPN) Try Again ): ", Toast.LENGTH_SHORT).show();
-                                });
+                                Tools.toast("Login Failed (Because of VPN) Try Again ): ");
                                 return;
                             }
                             isLinkedToGoogleDrive = DBHelper.insertIntoAccountsTable(signInResult.getUserEmail(),signInResult.getRefreshToken(),signInResult.getFolderId());
@@ -110,61 +92,50 @@ public class MainActivity extends AppCompatActivity {
 
 
     public static void checkPermissions(){
-        Thread manageAccessThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    int buildSdkInt = Build.VERSION.SDK_INT;
-                    if (buildSdkInt >= 30) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            if (!Environment.isExternalStorageManager()) {
-                                Intent getPermission = new Intent();
-                                getPermission.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                                activity.startActivity(getPermission);
-                                while (!Environment.isExternalStorageManager()){
-                                    System.out.println("here " + Environment.isExternalStorageManager());
-                                    try {
-                                        Thread.sleep(1000);
-                                    } catch (Exception e) {
-                                        System.out.println("Error while waiting for external storage manager: " + e.getLocalizedMessage());
-                                    }
-                                }
+        Thread manageAccessThread = new Thread(() -> {
+            try {
+                int buildSdkInt = Build.VERSION.SDK_INT;
+                if (buildSdkInt >= 30) {
+                    if (!Environment.isExternalStorageManager()) {
+                        Intent getPermission = new Intent();
+                        getPermission.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                        activity.startActivity(getPermission);
+                        while (!Environment.isExternalStorageManager()) {
+                            System.out.println("waiting for permission " + Environment.isExternalStorageManager());
+                            try {
+                                Thread.sleep(1000);
+                            } catch (Exception e) {
+                                System.out.println("Error while waiting for external storage manager: " + e.getLocalizedMessage());
                             }
                         }
                     }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        if (Environment.isExternalStorageManager()) {
-                            System.out.println("Starting to get access from your android device");
-                        }}
-                } catch (Exception e) {
-                    System.out.println("Error while checking permissions: " + e.getLocalizedMessage());
                 }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (Environment.isExternalStorageManager()) {
+                        System.out.println("Starting to get access from your android device");
+                    }}
+            } catch (Exception e) {
+                System.out.println("Error while checking permissions: " + e.getLocalizedMessage());
             }
-        };
-
-        Thread manageReadAndWritePermissonsThread = new Thread() {
-            @Override
-            public void run() {
-                if (true){
-                    int requestCode =1;
-                    String[] permissions = {
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    };
-                    boolean isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
-                            (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
-                    while(!isWriteAndReadPermissionGranted){
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                                (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED |
-                                        ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
-                            ActivityCompat.requestPermissions(activity, permissions, requestCode);
-                        }
-                        isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
-                                (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
-                    }
+        });
+        Thread manageReadAndWritePermissonsThread = new Thread( () -> {
+            int requestCode =1;
+            String[] permissions = {
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            };
+            boolean isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
+                    (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+            while(!isWriteAndReadPermissionGranted){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                        (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED |
+                                ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
+                    ActivityCompat.requestPermissions(activity, permissions, requestCode);
                 }
+                isWriteAndReadPermissionGranted = (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) &&
+                        (ContextCompat.checkSelfPermission(activity.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
             }
-        };
+        });
         manageAccessThread.start();
         try {
             manageAccessThread.join();
@@ -252,9 +223,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Important Information");
         builder.setMessage("Please note that the app needs to be opened at least once after installation or reboot to reschedule your alarms. Thank you!");
 
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            dialog.dismiss();
-        });
+        builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
 
         builder.setIcon(android.R.drawable.ic_dialog_alert);
         builder.setCancelable(false);
