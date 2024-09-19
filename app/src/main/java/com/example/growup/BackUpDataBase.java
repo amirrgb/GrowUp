@@ -1,7 +1,6 @@
 package com.example.growup;
 
 import android.content.Context;
-import android.widget.Toast;
 
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
@@ -19,18 +18,18 @@ public class BackUpDataBase {
         Thread backupDataBaseToDriveThread = new Thread( () -> {
             try {
                 GoogleCloud.signInResult account = DBHelper.getAccount();
-                String driveBackUpRefreshToken = account.getRefreshToken();
-                String driveBackupAccessToken = MainActivity.googleCloud.updateAccessToken(driveBackUpRefreshToken);
-                Drive service = GoogleCloud.initializeDrive(driveBackupAccessToken);
-                String databaseFolderId = account.getFolderId();
-                String uploadedFileId = setAndCreateDatabaseContent(service,databaseFolderId,dataBasePath);
-                if (uploadedFileId == null || uploadedFileId.isEmpty()) {
-                    LogHandler.saveLog("Failed to backUpDataBaseToDrive from Android to backup because it's null",true);
-                    return;
+                if (account != null) {
+                    String driveBackUpRefreshToken = account.getRefreshToken();
+                    String driveBackupAccessToken = MainActivity.googleCloud.updateAccessToken(driveBackUpRefreshToken);
+                    Drive service = GoogleCloud.initializeDrive(driveBackupAccessToken);
+                    String databaseFolderId = account.getFolderId();
+                    String uploadedFileId = setAndCreateDatabaseContent(service,databaseFolderId,dataBasePath);
+                    if (uploadedFileId == null || uploadedFileId.isEmpty()) {
+                        LogHandler.saveLog("Failed to backUpDataBaseToDrive from Android to backup because it's null",true);
+                        return;
+                    }
+                    Tools.toast("You're Synced, No Worry");
                 }
-                MainActivity.activity.runOnUiThread(()->{
-                    Toast.makeText(MainActivity.activity, "You're Synced, No Worry", Toast.LENGTH_SHORT).show();
-                });
             }catch (Exception e) {
                 LogHandler.saveLog("Failed to upload database from Android to backup : " + e.getLocalizedMessage(),true);
             }
@@ -70,14 +69,14 @@ public class BackUpDataBase {
             if (refreshToken == null || refreshToken.isEmpty()) {
                 return false;
             }
-//            String accessToken = MainActivity.googleCloud.updateAccessToken(refreshToken);
-//            if (accessToken == null || accessToken.isEmpty()) {
-//                return false;
-//            }
-//            if (GoogleCloud.isAccessTokenValid(accessToken)) {
-//                System.out.println("your access token is valid");
-//                return true;
-//            }
+            String accessToken = MainActivity.googleCloud.updateAccessToken(refreshToken);
+            if (accessToken == null || accessToken.isEmpty()) {
+                return false;
+            }
+            if (GoogleCloud.isAccessTokenValid(accessToken)) {
+                System.out.println("your access token is valid");
+                return true;
+            }
             return true;
         }catch (Exception e){
             LogHandler.saveLog("Failed to check linked to Google Drive: " + e.getLocalizedMessage(), true);

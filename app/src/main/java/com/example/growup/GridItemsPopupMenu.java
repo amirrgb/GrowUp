@@ -3,26 +3,24 @@ package com.example.growup;
 import static com.example.growup.GridAdapter.assetsId;
 import static com.example.growup.GridAdapter.assetsName;
 import static com.example.growup.GridAdapter.assetsIcon;
-import static com.example.growup.GridAdapter.mContext;
+//import static com.example.growup.GridAdapter.mContext;
 import static com.example.growup.GridAdapter.movingStatus;
 import static com.example.growup.GridAdapter.tempAssetId;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.view.Gravity;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.appcompat.widget.PopupMenu;
 
 
 
 public class GridItemsPopupMenu {
-    public static void displayPopUpMenu(int position, View gridView) {
+    public static void displayPopUpMenu(int position, View gridView, Context context) {
         if (movingStatus){
-            MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "paste selected asset first", Toast.LENGTH_SHORT).show());
+            Tools.toast("paste selected asset first");
             return;
         }
 
@@ -52,18 +50,20 @@ public class GridItemsPopupMenu {
         }
 
         popupMenu.setOnMenuItemClickListener(item -> {
-            String popupMenuItemTitle = item.getTitle().toString();
-            handleMenuItem(position,popupMenuItemTitle);
+            if (item.getTitle() != null) {
+                String popupMenuItemTitle = item.getTitle().toString();
+                handleMenuItem(position,popupMenuItemTitle,context);
+            }
             return true;
         });
         popupMenu.show();
     }
 
-    public static void handleMenuItem(int position, String itemTitle) {
+    public static void handleMenuItem(int position, String itemTitle, Context context) {
         int assetId = assetsId.get(position);
         switch (itemTitle) {
             case "Rename":
-                RenameItem(assetId, position);
+                RenameItem(assetId, position, context);
                 break;
             case "Move":
                 moveItem(position);
@@ -79,7 +79,7 @@ public class GridItemsPopupMenu {
                 deleteItem(assetId);
                 break;
             case "Share":
-                MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext, "I don't think somebody installed this app", Toast.LENGTH_SHORT).show());
+                Tools.toast("I don't think somebody installed this app");
                 break;
         }
     }
@@ -89,20 +89,17 @@ public class GridItemsPopupMenu {
         MainActivity.adapter.updateGridAdapter();
     }
 
-    public static void RenameItem(int assetId, int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+    public static void RenameItem(int assetId, int position, Context context) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Rename folder Folder");
-        final EditText input = new EditText(mContext);
+        final EditText input = new EditText(context);
         input.setText(assetsName.get(position));
         builder.setView(input);
 
         builder.setPositiveButton("Rename", (dialog, which) -> {
             String newFolderName = input.getText().toString();
             if (newFolderName.isEmpty()){
-                MainActivity.activity.runOnUiThread(() -> {
-                    MainActivity.activity.runOnUiThread(() -> Toast.makeText(mContext,
-                            "Folder name can't be empty", Toast.LENGTH_SHORT).show());
-                });
+                Tools.toast("Folder name can't be empty");
                 return;
             } else {
                 MainActivity.dbHelper.updateAssetName(String.valueOf(assetId), newFolderName);
@@ -113,12 +110,7 @@ public class GridItemsPopupMenu {
             MainActivity.adapter.updateGridAdapter();
         });
 
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
         builder.show();
     }
@@ -146,10 +138,7 @@ public class GridItemsPopupMenu {
     }
 
     public static void setReminder(int position) {
-        AlarmHandler alarmHandler = new AlarmHandler(MainActivity.activity);
-        alarmHandler.openAlarm(position);
-//        int assetId = assetsId.get(position);
-//        AlarmHandler.showChooseTime(MainActivity.activity, assetId);
+        AlarmHandler.openAlarm(position);
     }
 
     public static void moveItem(int position){

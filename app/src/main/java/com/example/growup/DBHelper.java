@@ -3,34 +3,24 @@ package com.example.growup;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
-import android.text.TextUtils;
-import android.widget.Toast;
+import android.util.Log;
+
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteException;
 import net.sqlcipher.database.SQLiteOpenHelper;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 public class DBHelper extends SQLiteOpenHelper {
-    public static Context DBcontext;
     public static final int DATABASE_VERSION = 12;
     public static SQLiteDatabase dbReadable;
     public static SQLiteDatabase dbWritable;
-
     private static DBHelper instance;
 
     public DBHelper(Context context) {
         super(context, context.getResources().getString(R.string.DataBase_Name), null, DATABASE_VERSION);
         String ENCRYPTION_KEY = context.getResources().getString(R.string.ENCRYPTION_KEY);
         SQLiteDatabase.loadLibs(context);
-        try {
-            DBcontext = MainActivity.activity;
-        }catch (Exception e) {
-            DBcontext = context;
-        }
         dbReadable = getReadableDatabase(ENCRYPTION_KEY);
         dbWritable = getReadableDatabase(ENCRYPTION_KEY);
         onCreate(getWritableDatabase(ENCRYPTION_KEY));
@@ -91,9 +81,9 @@ public class DBHelper extends SQLiteOpenHelper {
                 "assetId INTEGER," +
                 "title TEXT," +
                 "message TEXT," +
-                "date Date," +
+                "date TEXT," +
                 "alarmType TEXT," +
-                "milisToNextAlarm TEXT," +
+                "millisToNextAlarm TEXT," +
                 "priority TEXT," +
                 "requestCode INTEGER," +
                 "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
@@ -125,7 +115,7 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             sqLiteDatabase.execSQL(triggerSQL);
         } catch (SQLiteException e) {
-            if (!e.getMessage().contains("trigger " + triggerName + " already exists")) {
+            if (e.getMessage() != null && !e.getMessage().contains("trigger " + triggerName + " already exists")) {
                 throw e;
             }
         }
@@ -143,7 +133,7 @@ public class DBHelper extends SQLiteOpenHelper {
             dbWritable.execSQL(sqlQuery,new Object[]{email,refreshToken,folderId});
             dbWritable.setTransactionSuccessful();
         }catch (SQLiteConstraintException e){
-            Toast.makeText(DBcontext, "Duplicate Account", Toast.LENGTH_SHORT).show();
+            Tools.toast("Duplicate Account");
             return false;
         }catch (Exception e){
             LogHandler.saveLog("Failed to insert into Accounts table : " + e.getLocalizedMessage(),true);
@@ -165,7 +155,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 dbWritable.setTransactionSuccessful();
                 result[0] = true;
             } catch(SQLiteConstraintException ee) {
-                Toast.makeText(DBcontext, "Duplicate Keyword", Toast.LENGTH_SHORT).show();
+                Tools.toast("Duplicate Keyword");
             }catch(Exception e) {
                 LogHandler.saveLog("Failed to insert into ASSETS table : " + e.getLocalizedMessage(),true);
             } finally {
@@ -179,20 +169,6 @@ public class DBHelper extends SQLiteOpenHelper {
             LogHandler.saveLog("Failed to join insert thread: " + e.getLocalizedMessage(),true);
         }
         return result[0];
-    }
-
-    public static boolean insertIntoRemindersTable(String assetId,String title,String message, String date
-            , String time,String priority){
-        try {
-            dbWritable.beginTransaction();
-            String sqlQuery = "INSERT INTO REMINDERS (assetId, title, message, date, time, priority) VALUES (?,?,?,?,?,?)";
-            dbWritable.execSQL(sqlQuery, new Object[]{assetId,title, message, date, time, priority});
-            dbWritable.setTransactionSuccessful();
-            return true;
-        }catch (Exception e){
-            LogHandler.saveLog("Failed to insert into REMINDERS table : " + e.getLocalizedMessage(),true);
-        }
-        return false;
     }
 
     public void insertIntoNotesTable(String id,String title,String content){
@@ -226,38 +202,63 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public String[] getAsset(String id){
-        try{
+    public String[] getAsset(String id) {
+        Cursor cursor = null;
+        try {
             String sqlQuery = "SELECT * FROM ASSETS WHERE id = ?";
-            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{id});
+            cursor = dbReadable.rawQuery(sqlQuery, new String[]{id});
             String[] result;
-            if(cursor != null && cursor.moveToFirst()){
-                result = new String[]{cursor.getString(0),cursor.getString(1)
-                        ,cursor.getString(2),cursor.getString(3)};
-            }else{
-                result = new String[]{"","","",""};
+
+            if (cursor != null && cursor.moveToFirst()) {
+                result = new String[]{
+                        cursor.getString(0),
+                        cursor.getString(1),
+                        cursor.getString(2),
+                        cursor.getString(3)
+                };
+            } else {
+                result = new String[]{"", "", "", ""};
             }
-            cursor.close();
-            return result;
-        }catch (Exception e){
-            LogHandler.saveLog("failed to get Asset : " +e.getLocalizedMessage(), true);
+
+            return result ;
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to get Asset: " + e.getLocalizedMessage(), true);
+            return null;
+
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
         }
-        return null;
     }
 
-    public int getParentId(int id){
-        if (id == 0){
+
+    public int getParentId(int id) {
+        if (id == 0) {
             return 0;
         }
-        String sqlQuery = "SELECT pid FROM ASSETS WHERE id=?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(id)});
+
+        Cursor cursor = null;
         int parentId = 0;
-        if(cursor != null && cursor.moveToFirst()){
-            parentId = cursor.getInt(0);
+
+        try {
+            String sqlQuery = "SELECT pid FROM ASSETS WHERE id=?";
+            cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(id)});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                parentId = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to get parent ID: " + e.getLocalizedMessage(), true);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
         }
-        cursor.close();
+
         return parentId;
     }
+
 
     public void deleteAsset(int id){
         dbWritable.beginTransaction();
@@ -267,96 +268,112 @@ public class DBHelper extends SQLiteOpenHelper {
         dbWritable.endTransaction();
     }
 
-    public ArrayList<String[]> getAssetIdByPid(int pid){
+    public ArrayList<String[]> getAssetIdByPid(int pid) {
         ArrayList<String[]> assets = new ArrayList<>();
         Cursor cursor = null;
-        try{
+        try {
             String sqlQuery = "SELECT id,keyword,typeId,updatedAt FROM ASSETS WHERE pid=?";
             cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(pid)});
-            if(cursor != null && cursor.moveToFirst()){
-                do{
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
                     String id = cursor.getString(0);
                     String keyword = cursor.getString(1);
                     String typeId = cursor.getString(2);
                     String updatedAt = cursor.getString(3);
-                    String[] asset = {id,keyword,typeId,updatedAt};
+                    String[] asset = {id, keyword, typeId, updatedAt};
                     assets.add(asset);
-                }while (cursor.moveToNext());
+                } while (cursor.moveToNext());
             }
-            cursor.close();
-            return assets;
-        }catch (Exception e){
-            cursor.close();
-            LogHandler.saveLog("Failed to get assets by pid : "+e.getLocalizedMessage(),true);
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to get assets by pid: " + e.getLocalizedMessage(), true);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
         }
         return assets;
     }
 
+
     public String[] getNote(int currentId) {
         String[] note = new String[2];
-        String sqlQuery = "SELECT title,content FROM NOTES WHERE id=?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(currentId)});
-        if (cursor != null && cursor.moveToFirst()) {
-            note[0] = cursor.getString(0);
-            note[1] = cursor.getString(1);
+        Cursor cursor = null;
+
+        try {
+            String sqlQuery = "SELECT title,content FROM NOTES WHERE id=?";
+            cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(currentId)});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                note[0] = cursor.getString(0);
+                note[1] = cursor.getString(1);
+            }
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to get note: " + e.getLocalizedMessage(), true);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
         }
-        cursor.close();
+
         return note;
     }
 
+
     public String getLastId() {
-        dbReadable.beginTransaction();
-        String sqlQuery = "SELECT last_insert_rowid()";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, null);
         String lastId = "";
-        if (cursor != null && cursor.moveToFirst()) {
-            lastId = cursor.getString(0);
+        Cursor cursor = null;
+
+        try {
+            dbReadable.beginTransaction();
+            String sqlQuery = "SELECT last_insert_rowid()";
+            cursor = dbReadable.rawQuery(sqlQuery, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                lastId = cursor.getString(0);
+            }
+            dbReadable.setTransactionSuccessful();
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to get last ID: " + e.getLocalizedMessage(), true);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            dbReadable.endTransaction();
         }
-        cursor.close();
-        dbReadable.endTransaction();
+
         return lastId;
     }
 
-    public static GoogleCloud.signInResult getAccount(){
-        try{
-            String sqlQuery = "SELECT Email,RefreshToken,folderId FROM ACCOUNTS";
-            Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{});
-            String email = null;
-            String refreshToken = null;
-            String folderId = null;
 
-            if (cursor != null && cursor.moveToFirst()){
-                do{
-                    email =  cursor.getString(0);
-                    refreshToken = cursor.getString(1);
-                    folderId = cursor.getString(2);
-                    System.out.println("in accounts table : " +
-                            "\nemail : " + email +
-                            "\nrefresh token : " +refreshToken +
-                            "\nfolderId : " + folderId
-                            );
-                    cursor.close();
-                    return new GoogleCloud.signInResult(email,refreshToken,folderId);
-                }while(cursor.moveToNext());
+    public static GoogleCloud.signInResult getAccount() {
+        Cursor cursor = null;
+        try {
+            String sqlQuery = "SELECT Email,RefreshToken,folderId FROM ACCOUNTS";
+            cursor = dbReadable.rawQuery(sqlQuery, new String[]{});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                String email = cursor.getString(0);
+                String refreshToken = cursor.getString(1);
+                String folderId = cursor.getString(2);
+
+                System.out.println("in accounts table : " +
+                        "\nemail : " + email +
+                        "\nrefresh token : " + refreshToken +
+                        "\nfolderId : " + folderId
+                );
+
+                return new GoogleCloud.signInResult(email, refreshToken, folderId);
             }
-            cursor.close();
-        }catch (Exception e){
-            LogHandler.saveLog("failed to get account from database : " +e.getLocalizedMessage(), true);
+        } catch (Exception e) {
+            LogHandler.saveLog("Failed to get account from database: " + e.getLocalizedMessage(), true);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
         }
         return null;
     }
-
-    public static Date getAssetLastUpdateTime(int assetId){
-        String sqlQuery = "SELECT updatedAt FROM ASSETS WHERE id=?";
-        Cursor cursor = dbReadable.rawQuery(sqlQuery, new String[]{String.valueOf(assetId)});
-        Date lastUpdateTime = null;
-        if (cursor!= null && cursor.moveToFirst()){
-            lastUpdateTime = new Date(Long.parseLong(cursor.getString(0)));
-        }
-        cursor.close();
-        return lastUpdateTime;
-    }
-
 
     public void moveAsset(int assetId, int newParentId){
         dbWritable.beginTransaction();
@@ -368,43 +385,60 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public static List<Alarm> getAllAlarms() {
         ArrayList<Alarm> alarms = new ArrayList<>();
+        Cursor cursor = null;
         try {
-            String sqlQuery = "SELECT assetId, title, message, date, alarmType, milisToNextAlarm, priority, requestCode FROM REMINDERS";
-            Cursor cursor = dbReadable.rawQuery(sqlQuery, null);
-            if (cursor!= null && cursor.moveToFirst()) {
+            String sqlQuery = "SELECT assetId, title, message, date, alarmType, millisToNextAlarm, priority, requestCode FROM REMINDERS";
+            cursor = dbReadable.rawQuery(sqlQuery, null);
+            if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    String assetId = cursor.getString(0);
                     String title = cursor.getString(1);
                     String message = cursor.getString(2);
                     String date = cursor.getString(3);
-                    String alarmType = cursor.getString(4);
-                    String milisToNextAlarm = cursor.getLong(5) + "";
-                    String priority = cursor.getString(6);
                     String requestCode = cursor.getString(7);
-                    Alarm alarm = new Alarm(assetId, title, message, date, alarmType, milisToNextAlarm, priority, requestCode);
+                    Alarm alarm = new Alarm(title, message, date, requestCode);
                     alarms.add(alarm);
                 } while (cursor.moveToNext());
             }
-            cursor.close();
         } catch (Exception e) {
-            LogHandler.saveLog("Failed to get all reminders : " + e.getLocalizedMessage(), true);
+            LogHandler.saveLog("Failed to get all reminders: " + e.getLocalizedMessage(), true);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
         }
         return alarms;
     }
 
 
-    public static void deleteRedundantTypes(int limit){
-        try{
-            String sqlQuery = "DELETE FROM TYPES WHERE id NOT IN (SELECT id FROM TYPES LIMIT "+limit+")";
+    public static void recreateRemindersTable() {
+        try {
             dbWritable.beginTransaction();
-            dbWritable.execSQL(sqlQuery);
+            String renameOldTable = "ALTER TABLE REMINDERS RENAME TO REMINDERS_old;";
+            dbWritable.execSQL(renameOldTable);
+
+            String newRemindersTable = "CREATE TABLE IF NOT EXISTS REMINDERS(" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "assetId INTEGER," +
+                    "title TEXT," +
+                    "message TEXT," +
+                    "date TEXT," +
+                    "alarmType TEXT," +
+                    "millisToNextAlarm TEXT," +
+                    "priority TEXT," +
+                    "requestCode INTEGER," +
+                    "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                    "updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                    "FOREIGN KEY (assetId) REFERENCES ASSETS(id) ON DELETE CASCADE);";
+            dbWritable.execSQL(newRemindersTable);
+
+            String dropOldTable = "DROP TABLE IF EXISTS REMINDERS_old;";
+            dbWritable.execSQL(dropOldTable);
             dbWritable.setTransactionSuccessful();
-        }catch (Exception e){
-            LogHandler.saveLog("Failed to delete redundant types : " + e.getLocalizedMessage(), true);
-        }finally {
             dbWritable.endTransaction();
+
+            Log.i("Database", "Successfully recreated the REMINDERS table with new schema.");
+        } catch (Exception e) {
+            Log.e("Database", "Failed to recreate the REMINDERS table: " + e.getMessage());
         }
-
     }
-
 }

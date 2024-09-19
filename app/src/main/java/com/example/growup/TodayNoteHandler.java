@@ -3,9 +3,6 @@ package com.example.growup;
 import android.widget.EditText;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -31,10 +28,8 @@ public class TodayNoteHandler {
 
     public static boolean isAlarmForToday(String date) {
         try {
-            Date alarmDate;
-            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
-            alarmDate = dateFormat.parse(date);
-
+            Date alarmDate = Tools.dateFormat.parse(date);
+            if (alarmDate == null) return false;
             Calendar alarmCalendar = Calendar.getInstance();
             alarmCalendar.setTime(alarmDate);
 
@@ -58,10 +53,9 @@ public class TodayNoteHandler {
         StringBuilder sb = new StringBuilder();
         for (Alarm alarm : alarms) {
             if (isAlarmForToday(alarm.getDate())) {
-                sb.append(alarm.getTitle())
-                    .append(" : \n")
-                    .append(getHourAndMinuteOfDate(alarm.getDate()))
-                    .append("\n\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+                sb.append(getHourAndMinuteOfDate(alarm.getDate()))
+                        .append(" : ").append(alarm.getTitle())
+                    .append("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
             }
         }
         return sb.toString().trim();
@@ -69,10 +63,10 @@ public class TodayNoteHandler {
 
     public static List<Alarm> sortAlarmsByTime(List<Alarm> alarms) {
         Collections.sort(alarms, (a1, a2) -> {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
             try {
-                Date date1 = dateFormat.parse(a1.getDate());
-                Date date2 = dateFormat.parse(a2.getDate());
+                Date date1 = Tools.dateFormat.parse(a1.getDate());
+                Date date2 = Tools.dateFormat.parse(a2.getDate());
+                if (date1 == null || date2 == null) return 0;
                 return date1.compareTo(date2);
             } catch (Exception e) {
                 LogHandler.saveLog("Failed to parse date: " + e.getLocalizedMessage(), true);
@@ -88,17 +82,18 @@ public class TodayNoteHandler {
         MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
         EditText textViewTitle = MainActivity.activity.findViewById(R.id.textViewTitle);
         EditText textViewContent = MainActivity.activity.findViewById(R.id.textViewContent);
-        textViewTitle.setText("Today");
+        textViewTitle.setText(R.string.Today);
         textViewContent.setText(listAlarmsForToday());
         Setting.setListenerForButtons();
     }
 
     public static String getHourAndMinuteOfDate(String date){
         try{
-            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
-            Date date1 = dateFormat.parse(date);
+            Date date1 = Tools.dateFormat.parse(date);
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.ENGLISH);
-            return simpleDateFormat.format(date1);
+            if (date1 != null){
+                return simpleDateFormat.format(date1);
+            }
         }catch (Exception e){
             LogHandler.saveLog("failed to parse date in getHourAndMinuteOfDate method : " + e.getLocalizedMessage(), true);
         }

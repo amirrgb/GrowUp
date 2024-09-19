@@ -1,61 +1,40 @@
 package com.example.growup;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.text.InputType;
-import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class NoteHandler {
-    private FloatingActionButton addNewNoteButton = MainActivity.activity.findViewById(R.id.fabCreateNote);
 
     public void createNoteButton() {
-        addNewNoteButton = MainActivity.activity.findViewById(R.id.fabCreateNote);
-        addNewNoteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.activity);
-                builder.setTitle("Create Note");
-                final EditText input = new EditText(MainActivity.activity);
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                builder.setView(input);
-                builder.setPositiveButton("Create", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String noteName = input.getText().toString();
-                        if (noteName.equals("")) {
-                            MainActivity.activity.runOnUiThread(() -> {
-                                Toast.makeText(MainActivity.activity, "Note name cannot be empty", Toast.LENGTH_SHORT).show();
-                            });
-                        } else {
-                            if (MainActivity.dbHelper.insertIntoAssetsTable(noteName,
-                                    TypeHandler.getTypeIdByType("note"), MainActivity.currentId)) {
-                                String lastId = MainActivity.dbHelper.getLastId();
-                                MainActivity.dbHelper.insertIntoNotesTable(lastId, noteName, "");
-                                MainActivity.activity.runOnUiThread(() -> {
-                                    Toast.makeText(MainActivity.activity, "Note created", Toast.LENGTH_SHORT).show();
-                                });
-                                MainActivity.adapter.readChildItemsOf(MainActivity.currentId);
-                                MainActivity.adapter.updateGridAdapter();
-                            }else{
-                                MainActivity.activity.runOnUiThread(() -> {
-                                    Toast.makeText(MainActivity.activity, "cant create Note", Toast.LENGTH_SHORT).show();
-                                });
-                            }
-                        }
+        FloatingActionButton addNewNoteButton = MainActivity.activity.findViewById(R.id.fabCreateNote);
+        addNewNoteButton.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.activity);
+            builder.setTitle("Create Note");
+            final EditText input = new EditText(MainActivity.activity);
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            builder.setView(input);
+            builder.setPositiveButton("Create", (dialog, which) -> {
+                String noteName = input.getText().toString();
+                if (noteName.isEmpty()) {
+                    Tools.toast("Note name cannot be empty");
+                } else {
+                    if (MainActivity.dbHelper.insertIntoAssetsTable(noteName,
+                            TypeHandler.getTypeIdByType("note"), MainActivity.currentId)) {
+                        String lastId = MainActivity.dbHelper.getLastId();
+                        MainActivity.dbHelper.insertIntoNotesTable(lastId, noteName, "");
+                        Tools.toast("Note created");
+                        MainActivity.adapter.readChildItemsOf(MainActivity.currentId);
+                        MainActivity.adapter.updateGridAdapter();
+                    }else{
+                        Tools.toast("cant create Note");
                     }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                builder.show();
-            }
+                }
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.show();
         });
     }
 
@@ -77,10 +56,8 @@ public class NoteHandler {
         EditText textViewContent = MainActivity.activity.findViewById(R.id.textViewContent);
         String title = textViewTitle.getText().toString();
         String content = textViewContent.getText().toString();
-        if (title.equals("") || title.equals(" ")) {
-            MainActivity.activity.runOnUiThread(() -> {
-            Toast.makeText(MainActivity.activity, "Title cannot be empty", Toast.LENGTH_SHORT).show();
-            });
+        if (title.isEmpty() || title.trim().isEmpty()) {
+            Tools.toast("Title cannot be empty");
             return false;
         } else {
             String previousTitle = MainActivity.dbHelper.getNote(MainActivity.currentId)[0];
@@ -90,9 +67,6 @@ public class NoteHandler {
             }
             return true;
         }
-
-//        MainActivity.currentId = MainActivity.dbHelper.getParentId(MainActivity.currentId);
-//        MainActivity.adapter.reinitializeGridAdapter();
     }
 
 }

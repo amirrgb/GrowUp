@@ -14,7 +14,6 @@ import android.net.Uri;
 import androidx.core.app.NotificationCompat;
 import net.sqlcipher.Cursor;
 import net.sqlcipher.database.SQLiteDatabase;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class AlarmReceiver extends BroadcastReceiver {
@@ -58,11 +57,10 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         String[] alarm = getAlarmsData(context, requestCode);
         System.out.println("alarm data : " + alarm[0] + ", " + alarm[1]);
-        if (alarm == null) {
+        if (alarm[0] == null) {
             return;
         }
 
-        int assetId = Integer.parseInt(alarm[0]);
         String title = alarm[1];
         String message = alarm[2];
         String alarmType = alarm[4];
@@ -162,30 +160,35 @@ public class AlarmReceiver extends BroadcastReceiver {
     public String[] getAlarmsData(Context context, int requestCode) {
         String ENCRYPTION_KEY = context.getResources().getString(R.string.ENCRYPTION_KEY);
         SQLiteDatabase db = DBHelper.getInstance(context).getReadableDatabase(ENCRYPTION_KEY);
+        Cursor cursor = null;
 
         try {
-            String sqlQuery = "SELECT assetId, title, message, date, alarmType, milisToNextAlarm, priority" +
-                    " FROM REMINDERS WHERE requestCode =?;";
-            Cursor cursor = db.rawQuery(sqlQuery, new String[]{String.valueOf(requestCode)});
+            String sqlQuery = "SELECT assetId, title, message, date, alarmType, millisToNextAlarm, priority FROM REMINDERS WHERE requestCode=?";
+            cursor = db.rawQuery(sqlQuery, new String[]{String.valueOf(requestCode)});
+
             if (cursor != null && cursor.moveToFirst()) {
-                String[] temp =  new String[]{
-                        cursor.getInt(0) + "", //assetId,
-                        cursor.getString(1), //title,
-                        cursor.getString(2), //message,
-                        cursor.getString(3), //date,
-                        cursor.getString(4), //alarmType,
-                        cursor.getLong(5) + "", //milisToNextAlarm,
-                        cursor.getString(6) //priority
+                return new String[]{
+                        cursor.getInt(0) + "", // assetId
+                        cursor.getString(1),   // title
+                        cursor.getString(2),   // message
+                        cursor.getString(3),   // date
+                        cursor.getString(4),   // alarmType
+                        cursor.getLong(5) + "",// millisToNextAlarm
+                        cursor.getString(6)    // priority
                 };
-                cursor.close();
-                return temp;
             }
         } catch (Exception e) {
             LogHandler.saveLog("Failed to get alarms data: " + e.getLocalizedMessage(), true);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
         }
         return null;
     }
 
+
+    @SuppressLint("ScheduleExactAlarm")
     public static void setAlarm(Context context, long timeInMillis, int requestCode, String title, String message) {
         try {
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -195,9 +198,8 @@ public class AlarmReceiver extends BroadcastReceiver {
             intent.putExtra("requestCode", requestCode);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_MUTABLE);
-            alarmManager.set(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent);
-            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-            System.out.println("alarm set for time : " + formatter.format(timeInMillis));
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent);
+            System.out.println("alarm set for time : " + Tools.dateFormat.format(timeInMillis));
         } catch (Exception e) {
             LogHandler.saveLog("Failed to set alarm: " + e.getLocalizedMessage(), true);
         }
