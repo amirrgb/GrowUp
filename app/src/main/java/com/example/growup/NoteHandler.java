@@ -18,6 +18,7 @@ public class NoteHandler {
                 String lastId = DBHelper.getLastId();
                 MainActivity.currentId = Integer.parseInt(lastId);
                 DBHelper.insertIntoNotesTable(lastId, MainActivity.tempNoteString, "");
+                Setting.setListenerForButtons();
             }else{
                 Tools.toast("cant create Note");
                 MainActivity.backButtonProcess();
@@ -41,7 +42,7 @@ public class NoteHandler {
     public static void openTempNote(){
         MainActivity.activity.setContentView(R.layout.note_item);
         MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
-        Setting.setListenerForButtons();
+
     }
 
     public static String saveNote(){

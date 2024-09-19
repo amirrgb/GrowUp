@@ -1,6 +1,8 @@
 package com.example.growup;
 
 import android.content.Context;
+import android.view.View;
+import android.widget.Button;
 
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
@@ -75,6 +77,8 @@ public class BackUpDataBase {
             }
             if (GoogleCloud.isAccessTokenValid(accessToken)) {
                 System.out.println("your access token is valid");
+                Button googleDriveButton = MainActivity.activity.findViewById(R.id.sync_button);
+                googleDriveButton.setVisibility(View.GONE);
                 return true;
             }
             return true;
