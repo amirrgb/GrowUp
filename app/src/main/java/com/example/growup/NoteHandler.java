@@ -8,7 +8,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class NoteHandler {
 
-    public void createNoteButton() {
+    public static void createNoteButton() {
         FloatingActionButton addNewNoteButton = MainActivity.activity.findViewById(R.id.fabCreateNote);
         addNewNoteButton.setOnClickListener(v -> {
             // create temp note and open it
@@ -26,7 +26,7 @@ public class NoteHandler {
         });
     }
 
-    public void openNote() {
+    public static void openNote() {
         MainActivity.activity.setContentView(R.layout.note_item);
         MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
         String[] temp = DBHelper.getNote(MainActivity.currentId);

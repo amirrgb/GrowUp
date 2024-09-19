@@ -178,4 +178,8 @@ public class TypeHandler {
         String[] note = DBHelper.getNote(assetId);
         return !note[1].isEmpty();
     }
+
+    public static boolean isAssetNote(int assetId){
+        return TypeHandler.getTypeNameByAssetId(assetId).contains("note");
+    }
 }

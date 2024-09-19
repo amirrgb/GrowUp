@@ -32,18 +32,21 @@ public class GridAdapter extends BaseAdapter {
         MainActivity.gridView = MainActivity.activity.findViewById(R.id.gridView);
         MainActivity.adapter = new GridAdapter();
         MainActivity.adapter.updateGridAdapter();
+        if (TypeHandler.isAssetNote(MainActivity.currentId)){
+            NoteHandler.openNote();
+        }
     }
 
     public GridAdapter() {
         readChildItemsOf(MainActivity.currentId);
         mContext = MainActivity.activity;
-        MainActivity.noteCreator.createNoteButton();
+        NoteHandler.createNoteButton();
     }
 
     public void updateGridAdapter() {
         notifyDataSetChanged();
         readChildItemsOf(MainActivity.currentId);
-        MainActivity.noteCreator.createNoteButton();
+        NoteHandler.createNoteButton();
         notifyDataSetChanged();
         MainActivity.gridView.setAdapter(MainActivity.adapter);
         Setting.setListenerForButtons();
