@@ -25,12 +25,11 @@ import net.sqlcipher.database.SQLiteDebug;
 public class MainActivity extends AppCompatActivity {
     public static Activity activity;
     public static int currentId = 0;
-    public static final String tempNoteString = "thisIsTempNoteStringX";
+    public static final String tempNoteString = "thisIsTempNoteStringXXXXXX";
     public static SharedPreferences preferences;
     public static GridAdapter adapter;
     public static GoogleCloud googleCloud;
     public static GridView gridView;
-    public static NoteHandler noteCreator;
     public static ActivityResultLauncher<Intent> signInToBackUpLauncher;
     public static boolean isLinkedToGoogleDrive;
     public static boolean onSetAlarmScreen = false;
@@ -46,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         DBHelper.getInstance(activity);
         Upgrade.versionHandler(preferences);
         googleCloud = new GoogleCloud(this);
-        noteCreator = new NoteHandler();
         isLinkedToGoogleDrive = BackUpDataBase.isLinkedToGoogleDrive();
         GridAdapter.initializeGridAdapter();
 
@@ -153,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public static void backButtonProcess(){
+    public static void  backButtonProcess(){
         if (onSetAlarmScreen) {
             onSetAlarmScreen = false;
             GridAdapter.initializeGridAdapter();
@@ -172,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
             String result = NoteHandler.saveNote();
             switch (result) {
                 case "failure":
-                    MainActivity.noteCreator.openNote();
+                    NoteHandler.openNote();
                     break;
                 case "temp_failure":
                     int tempNoteId = currentId;
@@ -205,21 +203,18 @@ public class MainActivity extends AppCompatActivity {
             String result = NoteHandler.saveNote();
             switch (result) {
                 case "failure":
-                    MainActivity.noteCreator.openNote();
+                    NoteHandler.openNote();
                     break;
                 case "temp_failure":
                     int tempNoteId = currentId;
-                    currentId = DBHelper.getParentId(currentId);
                     NoteHandler.deleteTempNote(tempNoteId);
                     GridAdapter.initializeGridAdapter();
                     break;
                 case "success":
-                    currentId = DBHelper.getParentId(currentId);
                     GridAdapter.initializeGridAdapter();
                     break;
             }
         }else {
-            currentId = DBHelper.getParentId(currentId);
             GridAdapter.initializeGridAdapter();
         }
     }
@@ -234,21 +229,18 @@ public class MainActivity extends AppCompatActivity {
             String result = NoteHandler.saveNote();
             switch (result) {
                 case "failure":
-                    MainActivity.noteCreator.openNote();
+                    NoteHandler.openNote();
                     break;
                 case "temp_failure":
                     int tempNoteId = currentId;
-                    currentId = DBHelper.getParentId(currentId);
                     NoteHandler.deleteTempNote(tempNoteId);
                     GridAdapter.initializeGridAdapter();
                     break;
                 case "success":
-                    currentId = DBHelper.getParentId(currentId);
                     GridAdapter.initializeGridAdapter();
                     break;
             }
         }else {
-            currentId = DBHelper.getParentId(currentId);
             GridAdapter.initializeGridAdapter();
         }
     }

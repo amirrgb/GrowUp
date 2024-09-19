@@ -167,7 +167,7 @@ public class GridAdapter extends BaseAdapter {
                     return;
                 }
                 MainActivity.currentId = assetsId.get(position);
-                MainActivity.noteCreator.openNote();
+                NoteHandler.openNote();
                 break;
             case "pin_folder" :
             case "folder":
