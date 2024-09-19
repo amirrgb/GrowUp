@@ -25,6 +25,7 @@ import net.sqlcipher.database.SQLiteDebug;
 public class MainActivity extends AppCompatActivity {
     public static Activity activity;
     public static int currentId = 0;
+    public static final String tempNoteString = "thisIsTempNoteStringX";
     public static SharedPreferences preferences;
     public static GridAdapter adapter;
     public static GoogleCloud googleCloud;
@@ -166,14 +167,25 @@ public class MainActivity extends AppCompatActivity {
         if (DBHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
-        boolean canSaveNote = true;
+
         if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {
-            if (!NoteHandler.saveNote()){
-                MainActivity.noteCreator.openNote();
-                canSaveNote = false;
+            String result = NoteHandler.saveNote();
+            switch (result) {
+                case "failure":
+                    MainActivity.noteCreator.openNote();
+                    break;
+                case "temp_failure":
+                    int tempNoteId = currentId;
+                    currentId = DBHelper.getParentId(currentId);
+                    NoteHandler.deleteTempNote(tempNoteId);
+                    GridAdapter.initializeGridAdapter();
+                    break;
+                case "success":
+                    currentId = DBHelper.getParentId(currentId);
+                    GridAdapter.initializeGridAdapter();
+                    break;
             }
-        }
-        if (canSaveNote){
+        }else {
             currentId = DBHelper.getParentId(currentId);
             GridAdapter.initializeGridAdapter();
         }
@@ -188,10 +200,27 @@ public class MainActivity extends AppCompatActivity {
         if (DBHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
+
         if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {
-            if (!NoteHandler.saveNote()){
-                MainActivity.noteCreator.openNote();
+            String result = NoteHandler.saveNote();
+            switch (result) {
+                case "failure":
+                    MainActivity.noteCreator.openNote();
+                    break;
+                case "temp_failure":
+                    int tempNoteId = currentId;
+                    currentId = DBHelper.getParentId(currentId);
+                    NoteHandler.deleteTempNote(tempNoteId);
+                    GridAdapter.initializeGridAdapter();
+                    break;
+                case "success":
+                    currentId = DBHelper.getParentId(currentId);
+                    GridAdapter.initializeGridAdapter();
+                    break;
             }
+        }else {
+            currentId = DBHelper.getParentId(currentId);
+            GridAdapter.initializeGridAdapter();
         }
     }
     @Override
@@ -200,10 +229,27 @@ public class MainActivity extends AppCompatActivity {
         if (DBHelper.getParentId(currentId) == 0){
             Setting.setListenerForButtons();
         }
+
         if (TypeHandler.getTypeNameByAssetId(currentId).equals("note") || TypeHandler.getTypeNameByAssetId(currentId).equals("pin_note")) {
-            if (!NoteHandler.saveNote()){
-                MainActivity.noteCreator.openNote();
+            String result = NoteHandler.saveNote();
+            switch (result) {
+                case "failure":
+                    MainActivity.noteCreator.openNote();
+                    break;
+                case "temp_failure":
+                    int tempNoteId = currentId;
+                    currentId = DBHelper.getParentId(currentId);
+                    NoteHandler.deleteTempNote(tempNoteId);
+                    GridAdapter.initializeGridAdapter();
+                    break;
+                case "success":
+                    currentId = DBHelper.getParentId(currentId);
+                    GridAdapter.initializeGridAdapter();
+                    break;
             }
+        }else {
+            currentId = DBHelper.getParentId(currentId);
+            GridAdapter.initializeGridAdapter();
         }
     }
 

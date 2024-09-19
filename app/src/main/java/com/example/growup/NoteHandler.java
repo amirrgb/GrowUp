@@ -11,30 +11,17 @@ public class NoteHandler {
     public void createNoteButton() {
         FloatingActionButton addNewNoteButton = MainActivity.activity.findViewById(R.id.fabCreateNote);
         addNewNoteButton.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.activity);
-            builder.setTitle("Create Note");
-            final EditText input = new EditText(MainActivity.activity);
-            input.setInputType(InputType.TYPE_CLASS_TEXT);
-            builder.setView(input);
-            builder.setPositiveButton("Create", (dialog, which) -> {
-                String noteName = input.getText().toString();
-                if (noteName.isEmpty()) {
-                    Tools.toast("Note name cannot be empty");
-                } else {
-                    if (DBHelper.insertIntoAssetsTable(noteName,
-                            TypeHandler.getTypeIdByType("note"), MainActivity.currentId)) {
-                        String lastId = DBHelper.getLastId();
-                        DBHelper.insertIntoNotesTable(lastId, noteName, "");
-                        Tools.toast("Note created");
-                        MainActivity.adapter.readChildItemsOf(MainActivity.currentId);
-                        MainActivity.adapter.updateGridAdapter();
-                    }else{
-                        Tools.toast("cant create Note");
-                    }
-                }
-            });
-            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            builder.show();
+            // create temp note and open it
+            openTempNote();
+            if (DBHelper.insertIntoAssetsTable(MainActivity.tempNoteString,
+                    TypeHandler.getTypeIdByType("note"), MainActivity.currentId)) {
+                String lastId = DBHelper.getLastId();
+                MainActivity.currentId = Integer.parseInt(lastId);
+                DBHelper.insertIntoNotesTable(lastId, MainActivity.tempNoteString, "");
+            }else{
+                Tools.toast("cant create Note");
+                MainActivity.backButtonProcess();
+            }
         });
     }
 
@@ -51,22 +38,35 @@ public class NoteHandler {
         Setting.setListenerForButtons();
     }
 
-    public static boolean saveNote(){
+    public static void openTempNote(){
+        MainActivity.activity.setContentView(R.layout.note_item);
+        MainActivity.activity.findViewById(R.id.setting_button).setBackgroundResource(R.drawable.ic_back_button);
+        Setting.setListenerForButtons();
+    }
+
+    public static String saveNote(){
         EditText textViewTitle = MainActivity.activity.findViewById(R.id.textViewTitle);
         EditText textViewContent = MainActivity.activity.findViewById(R.id.textViewContent);
         String title = textViewTitle.getText().toString();
         String content = textViewContent.getText().toString();
+        String previousTitle = DBHelper.getNote(MainActivity.currentId)[0];
         if (title.isEmpty() || title.trim().isEmpty()) {
             Tools.toast("Title cannot be empty");
-            return false;
+            if (previousTitle.equals(MainActivity.tempNoteString)) {
+                return "temp_failure";
+            }
+            return "failure";
         } else {
-            String previousTitle = DBHelper.getNote(MainActivity.currentId)[0];
             String previousMessage = DBHelper.getNote(MainActivity.currentId)[1];
             if (!previousTitle.equals(title) ||!previousMessage.equals(content)) {
                 DBHelper.insertIntoNotesTable(String.valueOf(MainActivity.currentId), title, content);
             }
-            return true;
+            return "success";
         }
+    }
+
+    public static void deleteTempNote(int tempNoteID){
+        DBHelper.deleteAsset(tempNoteID);
     }
 
 }

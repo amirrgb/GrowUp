@@ -7,6 +7,7 @@ import android.text.SpannableString;
 import android.text.style.AlignmentSpan;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.AppCompatButton;
@@ -88,6 +89,11 @@ public class Setting {
             Tools.toast("Please Wait To Load Google Page");
             MainActivity.googleCloud.signInToGoogleCloud(MainActivity.signInToBackUpLauncher);
         });
+
+        TextView header = MainActivity.activity.findViewById(R.id.headerTextView);
+        String parentId = DBHelper.getParentId(MainActivity.currentId) + "";
+        String headerText = DBHelper.getAsset(parentId)[2];
+        header.setText(headerText);
     }
 
     }
